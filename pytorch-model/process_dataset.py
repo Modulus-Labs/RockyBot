@@ -8,6 +8,12 @@ import constants
 
 def read_data_from_csv():
     
+    # --- Cols 0 and 9 are timestamps ---
+    # --- Cols 6-8 are labels ---
+    
+    # TODO(ryancao)!
+    # --- Cols 15-17 are Bitcoin prices, but in the future :'( ---
+    
     idx_to_field_data = list()
     idx_to_field_labels = list()
     data_features = list()
@@ -17,10 +23,13 @@ def read_data_from_csv():
         data_reader = csv.reader(data_file, delimiter=",")
         for idx, row in enumerate(data_reader):
             if idx == 0:
-                idx_to_field_data = row[:6] + row[9:]
+                idx_to_field_data = row[1:6] + row[10:]
                 idx_to_field_labels = row[6:9]
             else:
-                data_features.append(row[:6] + row[9:])
+                # --- Data has some holes in it ---
+                if row[6] == "" or row[7] == "" or row[8] == "":
+                    continue
+                data_features.append(row[1:6] + row[10:])
                 labels.append(row[6:9])
     
     return idx_to_field_data, idx_to_field_labels, np.asarray(data_features), np.asarray(labels)

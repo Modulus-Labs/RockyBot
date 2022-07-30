@@ -1,1 +1,1 @@
-{"eth_time": 0, "eth_price": 1, "eth_high": 2, "eth_low": 3, "eth_24hourhigh": 4, "eth_24hourlow": 5, "btc_time": 6, "btc_price": 7, "btc_high": 8, "btc_low": 9, "btc_24hourhigh": 10, "btc_24hourlow": 11, "btc_nexthourprice": 12, "btc_nextdayprice": 13, "btc_nextweekprice": 14}
+{"eth_price": 0, "eth_high": 1, "eth_low": 2, "eth_24hourhigh": 3, "eth_24hourlow": 4, "btc_price": 5, "btc_high": 6, "btc_low": 7, "btc_24hourhigh": 8, "btc_24hourlow": 9, "btc_nexthourprice": 10, "btc_nextdayprice": 11, "btc_nextweekprice": 12}
