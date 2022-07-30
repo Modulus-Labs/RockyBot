@@ -25,14 +25,18 @@ class BTC_ETH_Hour_Day_Week_Dataset(Dataset):
 
         # --- Load in dataset + labels ---
         with open(self.data_path, "rb") as f:
-            self.x = torch.from_numpy(np.load(f))
+            self.x = torch.from_numpy(np.load(f)).float()
         with open(self.label_path, "rb") as f:
-            self.y = torch.from_numpy(np.load(f))
+            self.y = torch.from_numpy(np.load(f)).float()
 
     def get_input_dim(self):
+        print("input dim")
+        print(self.x.shape)
         return self.x.shape[1]
 
     def get_output_dim(self):
+        print("output dim")
+        print(self.y.shape)
         return self.y.shape[1]
 
     def __getitem__(self, idx):

@@ -50,8 +50,7 @@ def train_one_epoch(model, train_dataloader, criterion, opt, args):
         opt.step()
 
         # --- Bookkeeping ---
-        preds = torch.round(torch.sigmoid(logits))
-        residuals = torch.abs(y - preds)
+        residuals = torch.abs(y - logits)
 
         total_loss += loss.item()
         total_residual += torch.sum(residuals).item()
@@ -60,8 +59,8 @@ def train_one_epoch(model, train_dataloader, criterion, opt, args):
         avg_loss = total_loss / total_examples
         avg_residual = total_residual / total_examples
 
-        if idx % args.print_every_train_minibatch == 0:
-            tqdm.write(f"Train minibatch number: {idx} | Avg loss: {avg_loss} | Avg residual: {avg_residual}")
+        # if idx % args.print_every_train_minibatch == 0:
+        #     tqdm.write(f"Train minibatch number: {idx} | Avg loss: {avg_loss} | Avg residual: {avg_residual}")
 
 
     return avg_loss, avg_residual, total_examples
@@ -93,8 +92,7 @@ def eval_model(model, val_dataloader, criterion, args):
             loss = criterion(y, logits)
 
             # --- Bookkeeping ---
-            preds = torch.round(torch.sigmoid(logits))
-            residuals = torch.abs(y - preds)
+            residuals = torch.abs(y - logits)
 
             total_loss += loss.item()
             total_residual += torch.sum(residuals).item()
@@ -103,8 +101,8 @@ def eval_model(model, val_dataloader, criterion, args):
             avg_loss = total_loss / total_examples
             avg_residual = total_residual / total_examples
             
-            if idx % args.print_every_eval_minibatch == 0:
-                tqdm.write(f"Val minibatch number: {idx} | Avg loss: {avg_loss} | Avg residual: {avg_residual}")
+            # if idx % args.print_every_eval_minibatch == 0:
+            #     tqdm.write(f"Val minibatch number: {idx} | Avg loss: {avg_loss} | Avg residual: {avg_residual}")
 
     return avg_loss, avg_residual, total_examples
 
@@ -144,8 +142,8 @@ def train(args, model, train_dataloader, val_dataloader, criterion, opt):
 
         # --- Plot loss/ious so far (TODO: do this every epoch?) ---
         # --- Then save all train stats ---
-        # viz_utils.plot_losses_ious(train_losses, train_ious, viz_path, prefix="train")
-        save_train_stats(train_losses, train_ious, val_losses, val_ious, args)
+        # viz_utils.plot_losses_ious(train_losses, train_residuals, viz_path, prefix="train")
+        save_train_stats(train_losses, train_residuals, val_losses, val_residuals, args)
         
         # --- Only save actual model files every so often ---
         if epoch % args.save_every == 0:

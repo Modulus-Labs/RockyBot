@@ -1,3 +1,5 @@
+import os
+
 # --- For process_dataset.py ---
 RAW_DATA_FILE = "eth_btc_pricedata.csv"
 LABEL_FIELDS = ["eth_nexthourprice", "eth_nextdayprice", "eth_nextweekprice"]
@@ -19,6 +21,13 @@ DEFAULT_TRAIN_EPOCHS = 50
 DEFAULT_TRAIN_LR = 1e-3 # 3e-4 initially
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_OPTIM = "adam"
+DEFAULT_EVAL_EVERY = 5
+DEFAULT_PRINT_EVERY = 1
+DEFAULT_SAVE_EVERY = 10
+DEFAULT_PRINT_EVERY_MINIBATCH = 1e20 # Never
+
+# --- For eval ---
+DEFAULT_EVAL_PRINT_EVERY_MINIBATCH = 100
 
 # --- Models are saved under {task_type}_task/{model_type}/{model_name}/{epoch}.pth ---
 # --- Visuals are saved under {task_type}_viz/{model_type}/{model_name}/{img_name}.png ---
@@ -27,4 +36,8 @@ def get_model_dir(task_name, model_type, model_name):
 def get_viz_dir(task_name, model_type, model_name):
     return os.path.join(f"{task_name}_viz", model_type, model_name)
 
+# --- Default dataset ---
 HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
+
+# --- Default model ---
+SIMPLE_3_LAYER_NN = "simple_3_layer_nn"

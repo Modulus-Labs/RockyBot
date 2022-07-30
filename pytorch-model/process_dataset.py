@@ -29,10 +29,31 @@ def read_data_from_csv():
                 # --- Data has some holes in it ---
                 if row[6] == "" or row[7] == "" or row[8] == "":
                     continue
-                data_features.append(row[1:6] + row[10:])
-                labels.append(row[6:9])
+                skip = False
+                for x in row[1:9] + row[10:]:
+                    if float(x) > 1e10:
+                        skip = True
+                if skip:
+                    continue
+
+                row_features = list(float(x) for x in (row[1:6] + row[10:]))
+                row_labels = list(float(x) for x in row[6:9])
+                data_features.append(row_features)
+                labels.append(row_labels)
+
+    data_features = np.asarray(data_features) / 1000
+    labels = np.asarray(labels) / 1000
+
+    # --- Check for infinities ---
+    for idx, row in enumerate(data_features):
+        if np.sum(row > 1e8) > 0:
+            print(idx, row)
+    print()
+    for idx, row in enumerate(labels):
+        if np.sum(row > 1e8) > 0:
+            print(idx, row)
     
-    return idx_to_field_data, idx_to_field_labels, np.asarray(data_features), np.asarray(labels)
+    return idx_to_field_data, idx_to_field_labels, np.asarray(data_features) / 1000, np.asarray(labels) / 1000
 
 
 def process_save_data(idx_to_field_data, idx_to_field_labels, data_features, labels):
@@ -51,8 +72,8 @@ def process_save_data(idx_to_field_data, idx_to_field_labels, data_features, lab
     
     # --- Save to files ---
     train_features_save_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_DATASET_FILENAME)
-    train_labels_save_path = os.path.join(constants.DATASET_DIR, constants.VAL_DATASET_FILENAME)
-    val_features_save_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_LABELS_FILENAME)
+    train_labels_save_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_LABELS_FILENAME)
+    val_features_save_path = os.path.join(constants.DATASET_DIR, constants.VAL_DATASET_FILENAME)
     val_labels_save_path = os.path.join(constants.DATASET_DIR, constants.VAL_LABELS_FILENAME)
     
     print(f"Saving to {train_features_save_path}...")
