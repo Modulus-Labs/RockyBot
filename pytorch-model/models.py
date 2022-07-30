@@ -7,12 +7,14 @@ class Simple_3_Layer_NN(nn.Module):
     """
     3-Layer regression NN for ETH/BTC dataset.
     """
-    def __init__(self, x_dim, h1_dim=32, h2_dim=32, out_dim=3):
+    def __init__(self, dataset_ref, h1_dim=32, h2_dim=32):
 
         super(Simple_3_Layer_NN, self).__init__()
 
         # --- Save the dims ---
-        self.x_dim, self.h1_dim, self.h2_dim, self.out_dim = x_dim, h1_dim, h2_dim, out_dim
+        self.x_dim = dataset_ref.get_input_dim()
+        self.out_dim = dataset_ref.get_output_dim()
+        self.h1_dim, self.h2_dim = h1_dim, h2_dim
 
         # --- Layers ---
         self.linear_1 = nn.Linear(in_features=self.x_dim, out_features=self.h1_dim)

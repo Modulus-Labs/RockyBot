@@ -3,7 +3,7 @@ import constants
 import datasets
 import models
 
-def get_classify_train_args():
+def get_train_args():
     """
     Args for `train.py`.
     """

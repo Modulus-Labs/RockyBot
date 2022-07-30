@@ -21,8 +21,10 @@ DEFAULT_BATCH_SIZE = 32
 DEFAULT_OPTIM = "adam"
 
 # --- Models are saved under {task_type}_task/{model_type}/{model_name}/{epoch}.pth ---
-HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
-HOUR_DAY_WEEK_TASK_DIR = f"{HOUR_DAY_WEEK_TASK}_task"
-
 # --- Visuals are saved under {task_type}_viz/{model_type}/{model_name}/{img_name}.png ---
-HOUR_DAY_WEEK_TASK_VIZ = f"{HOUR_DAY_WEEK_TASK}_viz"
+def get_model_dir(task_name, model_type, model_name):
+    return os.path.join(f"{task_name}_task", model_type, model_name)
+def get_viz_dir(task_name, model_type, model_name):
+    return os.path.join(f"{task_name}_viz", model_type, model_name)
+
+HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
