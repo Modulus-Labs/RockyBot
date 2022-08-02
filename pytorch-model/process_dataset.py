@@ -56,6 +56,30 @@ def read_data_from_csv():
     return idx_to_field_data, idx_to_field_labels, np.asarray(data_features), np.asarray(labels)
 
 
+def process_hdw_no_context_task(idx_to_field_data, idx_to_field_labels, data_features, labels):
+    """
+    No-context dataset which asks network to regress future ETH prices, given
+    a snapshot of current prices.
+    
+    Also cuts the last three columns (BTC prices in the future) from data_features.
+    """
+    
+    # --- Cuts BTC prices in the future from features ---
+    data_features = np.transpose(np.transpose(data_features)[:-3])
+    idx_to_field_data = idx_to_field_data[:-3]
+    
+    # --- Doing a 10 to 1 (non-random) split ---
+    split_idx = int(len(data_features) * 9 / 10)
+    
+    # --- Extract elements ---
+    val_features = data_features[split_idx:]
+    val_labels = labels[split_idx:]
+    train_features = data_features[:split_idx]
+    train_labels = labels[:split_idx]
+    
+    return train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels
+
+
 def process_hour_day_week_task(idx_to_field_data, idx_to_field_labels, data_features, labels):
     
     # --- Doing a 10 to 1 (random) split ---
@@ -72,10 +96,16 @@ def process_hour_day_week_task(idx_to_field_data, idx_to_field_labels, data_feat
     train_features = data_features[train_mask]
     train_labels = labels[train_mask]
     
-    return train_features, train_labels, val_features, val_labels
+    return train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels
 
 
-def process_save_data(train_features, train_labels, val_features, val_labels, task_type):
+def process_save_data(train_features, 
+                      train_labels, 
+                      val_features, 
+                      val_labels, 
+                      idx_to_field_data, 
+                      idx_to_field_labels, 
+                      task_type):
     
     # --- Save to files ---
     train_features_save_path = constants.get_dataset_train_filepath(task_type)
@@ -127,19 +157,31 @@ if __name__ == "__main__":
     # --- For consistency ---
     np.random.seed(constants.RANDOM_SEED)
     
+    # --- Create folders ---
+    save_dir = os.path.join(constants.DATASET_DIR, constants.HDW_NO_CONTEXT_TASK)
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
+    
     # --- Read data ---
     idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
     
     # --- Grab features/labels ---
-    train_features, train_labels, val_features, val_labels = \
-    process_hour_day_week_task(idx_to_field_data, 
+    train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
+    process_hdw_no_context_task(idx_to_field_data, 
                                idx_to_field_labels, 
                                data_features, 
                                labels)
-    
+    # process_hour_day_week_task(idx_to_field_data, 
+    #                            idx_to_field_labels, 
+    #                            data_features, 
+    #                            labels)
+
     # --- Save data to file ---
     process_save_data(train_features, 
                       train_labels, 
                       val_features, 
                       val_labels, 
-                      task_type=constants.HOUR_DAY_WEEK_TASK)
+                      idx_to_field_data,
+                      idx_to_field_labels,
+                      task_type=constants.HDW_NO_CONTEXT_TASK)
+                      # task_type=constants.HOUR_DAY_WEEK_TASK)

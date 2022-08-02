@@ -50,8 +50,16 @@ def get_dataset_features_to_idx_path(task_type):
 def get_dataset_labels_to_idx_path(task_type):
     return os.path.join(DATASET_DIR, task_type, LABELS_TO_IDX_FILENAME)
 
-# --- Default dataset ---
+# --- All datasets ---
+
+# Gives future Bitcoin prices --> not great
 HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
+# No context --> only one timestamp worth of price info
+HDW_NO_CONTEXT_TASK = "btc_eth_hdw_no_context"
+# Classifies which direction the price will move
+CLASSIFICATION_NO_CONTEXT_TASK = "btc_eth_classification_no_context"
+# In theory, the best one. With context and classification
+CLASSIFICATION_TASK = "btc_eth_classification"
 
 # --- Default model ---
 SIMPLE_3_LAYER_NN = "simple_3_layer_nn"

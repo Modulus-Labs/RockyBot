@@ -140,7 +140,7 @@ def train(args, model, train_dataloader, val_dataloader, criterion, opt):
         if epoch % args.print_every == 0:
             print(f"Epoch: {epoch} | Train avg loss: {train_avg_loss} | Train avg residual: {train_avg_residual}")
 
-        # --- Plot loss/ious so far (TODO: do this every epoch?) ---
+        # --- Plot loss/metrics so far (TODO: do this every epoch?) ---
         # --- Then save all train stats ---
         # viz_utils.plot_losses_ious(train_losses, train_residuals, viz_path, prefix="train")
         save_train_stats(train_losses, train_residuals, val_losses, val_residuals, args)
