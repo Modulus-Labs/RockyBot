@@ -56,6 +56,144 @@ def read_data_from_csv():
     return idx_to_field_data, idx_to_field_labels, np.asarray(data_features), np.asarray(labels)
 
 
+def preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels):
+    """
+    > Cuts BTC prices in the future from features
+    > Creates new label column (i.e. price from 6 hours later)
+    """
+    # --- Cuts BTC prices in the future from features ---
+    data_features = np.transpose(np.transpose(data_features)[:-3])
+    idx_to_field_data = idx_to_field_data[:-3]
+
+    # --- Creates new label (ETH price 6 hours later) ---
+    new_row = np.transpose(labels)[0][5:]
+    new_row = new_row.reshape(1, len(np.transpose(labels)[0]) - 5)
+    labels = np.transpose(np.concatenate([np.transpose(labels[:-5]), new_row]))
+    data_features = data_features[:-5]
+    
+    return idx_to_field_data, idx_to_field_labels, data_features, labels
+
+
+def playground(idx_to_field_data, idx_to_field_labels, data_features, labels):
+    """
+    Messing around with the dataset to determine bins for classification.
+    """
+    # --- Cuts BTC prices in the future from features ---
+    data_features = np.transpose(np.transpose(data_features)[:-3])
+    idx_to_field_data = idx_to_field_data[:-3]
+
+    # --- Creates new label (6 hours later) ---
+    new_row = np.transpose(labels)[0][5:]
+    new_row = new_row.reshape(1, len(np.transpose(labels)[0]) - 5)
+    labels = np.transpose(np.concatenate([np.transpose(labels[:-5]), new_row]))
+    data_features = data_features[:-5]
+
+    # --- Time to make buckets ---
+    hour = {"less": list(), "more": list()}
+    day = {"less": list(), "more": list()}
+    week = {"less": list(), "more": list()}
+    
+    # --- Compare ETH prices now vs. later ---
+    for idx, (data, label) in enumerate(zip(data_features, labels)):
+
+        if label[0] - data[0] < 0:
+            hour["less"].append(label[0] - data[0])
+        else:
+            hour["more"].append(label[0] - data[0])
+        
+        if label[1] - data[0] < 0:
+            day["less"].append(label[1] - data[0])
+        else:
+            day["more"].append(label[1] - data[0])
+
+        if label[2] - data[0] < 0:
+            week["less"].append(label[2] - data[0])
+        else:
+            week["more"].append(label[2] - data[0])
+    
+    hour_less_stats = len(hour["less"]), np.mean(hour["less"])
+    hour_more_stats = len(hour["more"]), np.mean(hour["more"])
+    day_less_stats = len(day["less"]), np.mean(day["less"])
+    day_more_stats = len(day["more"]), np.mean(day["more"])
+    week_less_stats = len(week["less"]), np.mean(week["less"])
+    week_more_stats = len(week["more"]), np.mean(hour["more"])
+    print(f"hour less: {hour_less_stats}")
+    print(f"hour more: {hour_more_stats}")
+    print(f"day less: {day_less_stats}")
+    print(f"day more: {day_more_stats}")
+    print(f"week less: {week_less_stats}")
+    print(f"week more: {week_more_stats}")
+    
+    # --- Do histogram ---
+    six_hour_hist_bins = [-2, -0.1, -0.075, -0.05, -0.04, -0.03, -0.02, -0.015, -0.01, -0.005, 0, 0.005, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 2]
+    six_hour_hist_bins = [-2, -0.1, -0.05, -0.03, -0.015, -0.005, 0.005, 0.015, 0.03, 0.05, 0.1, 2]
+    # six_hour_hist_bins = [-2] + list(np.arange(20) / 100 - 0.1) + [2]
+    print(six_hour_hist_bins)
+    hour_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[0], 
+                             bins=[-2, -0.1, -0.05, -0.025, 0, 0.025, 0.05, 0.1, 2])
+    six_hour_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[3],
+                                 bins=six_hour_hist_bins)
+    day_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[1],
+                            bins=[-2, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 2])
+    week_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[2],
+                             bins=[-2, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 2])
+    
+    print()
+    print(hour_hist[0])
+    print(hour_hist[1])
+    print()
+    print(six_hour_hist[0])
+    print(six_hour_hist[1])
+    print()
+    print(day_hist[0])
+    print(day_hist[1])
+    print()
+    print(week_hist[0])
+    print(week_hist[1])
+    print()
+    
+    exit()
+
+
+def process_classification_no_context_task(idx_to_field_data, 
+                                           idx_to_field_labels, 
+                                           data_features, 
+                                           labels):
+    """
+    No-context dataset which asks network to predict, for each bucket of
+    time period (hour, day, week), whether/how much future ETH prices will
+    go up or down.
+    """
+    
+    # --- Remove BTC prices from future and add in 6-hours-ahead data ---
+    idx_to_field_data, idx_to_field_labels, data_features, labels = preprocess_data(idx_to_field_data, 
+                                                                                    idx_to_field_labels, 
+                                                                                    data_features, 
+                                                                                    labels)
+    
+    # --- Picks ONLY the 6-hours-ahead price data delta as labels ---
+    labels = np.transpose(labels)[3] - np.transpose(labels)[0]
+    six_hour_hist_bins = [-2, -0.1, -0.05, -0.03, -0.015, -0.005, 0, 0.005, 0.015, 0.03, 0.05, 0.1, 2]
+    new_labels = np.zeros_like(labels)
+    for label_idx, label in enumerate(labels):
+        for bin_idx in range(len(six_hour_hist_bins) - 1):
+            if label >= six_hour_hist_bins[bin_idx] and label < six_hour_hist_bins[bin_idx + 1]:
+                new_labels[label_idx] = bin_idx
+                break
+
+    # --- Doing a 10 to 1 (non-random) split ---
+    split_idx = int(len(data_features) * 9 / 10)
+    
+    # --- Extract elements ---
+    val_features = data_features[split_idx:]
+    val_labels = new_labels[split_idx:]
+    train_features = data_features[:split_idx]
+    train_labels = new_labels[:split_idx]
+
+    # --- Return the bins as the new label fields ---
+    return train_features, train_labels, val_features, val_labels, idx_to_field_data, six_hour_hist_bins
+
+
 def process_hdw_no_context_task(idx_to_field_data, idx_to_field_labels, data_features, labels):
     """
     No-context dataset which asks network to regress future ETH prices, given
@@ -167,10 +305,14 @@ if __name__ == "__main__":
     
     # --- Grab features/labels ---
     train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
-    process_hdw_no_context_task(idx_to_field_data, 
-                               idx_to_field_labels, 
-                               data_features, 
-                               labels)
+    process_classification_no_context_task(idx_to_field_data,
+                                           idx_to_field_labels, 
+                                           data_features, 
+                                           labels)
+    # process_hdw_no_context_task(idx_to_field_data, 
+    #                            idx_to_field_labels, 
+    #                            data_features, 
+    #                            labels)
     # process_hour_day_week_task(idx_to_field_data, 
     #                            idx_to_field_labels, 
     #                            data_features, 
@@ -183,5 +325,6 @@ if __name__ == "__main__":
                       val_labels, 
                       idx_to_field_data,
                       idx_to_field_labels,
-                      task_type=constants.HDW_NO_CONTEXT_TASK)
+                      task_type=constants.CLASSIFICATION_NO_CONTEXT_TASK)
+                      # task_type=constants.HDW_NO_CONTEXT_TASK)
                       # task_type=constants.HOUR_DAY_WEEK_TASK)

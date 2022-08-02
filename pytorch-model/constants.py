@@ -57,9 +57,10 @@ HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
 # No context --> only one timestamp worth of price info
 HDW_NO_CONTEXT_TASK = "btc_eth_hdw_no_context"
 # Classifies which direction the price will move
-CLASSIFICATION_NO_CONTEXT_TASK = "btc_eth_classification_no_context"
+CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK = "btc_eth_classification_eth_6hr_no_context"
 # In theory, the best one. With context and classification
-CLASSIFICATION_TASK = "btc_eth_classification"
+CLASSIFICATION_ETH_6HR_TASK = "btc_eth_classification_eth_6hr"
 
-# --- Default model ---
+# --- Models ---
 SIMPLE_3_LAYER_NN = "simple_3_layer_nn"
+SIMPLE_3_LAYER_CLASSIFIER = "simple_3_layer_nn"
