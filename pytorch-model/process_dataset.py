@@ -53,13 +53,15 @@ def read_data_from_csv():
         if np.sum(row > 1e8) > 0:
             print(idx, row)
     
-    return idx_to_field_data, idx_to_field_labels, np.asarray(data_features) / 1000, np.asarray(labels) / 1000
+    return idx_to_field_data, idx_to_field_labels, np.asarray(data_features), np.asarray(labels)
 
 
-def process_save_data(idx_to_field_data, idx_to_field_labels, data_features, labels):
+def process_hour_day_week_task(idx_to_field_data, idx_to_field_labels, data_features, labels):
     
-    # --- Doing a 10 to 1 split ---
-    val_indices = np.random.choice(range(len(data_features)), int(len(data_features) / 10), replace=False)
+    # --- Doing a 10 to 1 (random) split ---
+    val_indices = np.random.choice(range(len(data_features)), 
+                                   int(len(data_features) / 10), 
+                                   replace=False)
     
     # --- Extract elements ---
     val_features = data_features[val_indices]
@@ -70,11 +72,16 @@ def process_save_data(idx_to_field_data, idx_to_field_labels, data_features, lab
     train_features = data_features[train_mask]
     train_labels = labels[train_mask]
     
+    return train_features, train_labels, val_features, val_labels
+
+
+def process_save_data(train_features, train_labels, val_features, val_labels, task_type):
+    
     # --- Save to files ---
-    train_features_save_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_DATASET_FILENAME)
-    train_labels_save_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_LABELS_FILENAME)
-    val_features_save_path = os.path.join(constants.DATASET_DIR, constants.VAL_DATASET_FILENAME)
-    val_labels_save_path = os.path.join(constants.DATASET_DIR, constants.VAL_LABELS_FILENAME)
+    train_features_save_path = constants.get_dataset_train_filepath(task_type)
+    train_labels_save_path = constants.get_dataset_train_labelpath(task_type)
+    val_features_save_path = constants.get_dataset_val_filepath(task_type)
+    val_labels_save_path = constants.get_dataset_val_labelpath(task_type)
     
     print(f"Saving to {train_features_save_path}...")
     with open(train_features_save_path, "wb") as f:
@@ -102,12 +109,12 @@ def process_save_data(idx_to_field_data, idx_to_field_labels, data_features, lab
         labels_to_idx[label] = idx
     
     # --- Save labels/features + associated indices ---
-    features_to_indices_save_path = os.path.join(constants.DATASET_DIR, constants.FEATURES_TO_IDX_FILENAME)
+    features_to_indices_save_path = constants.get_dataset_features_to_idx_path(task_type)
     print(f"Saving to {features_to_indices_save_path}...")
     with open(features_to_indices_save_path, "w") as f:
         json.dump(features_to_idx, f)
     
-    labels_to_indices_save_path = os.path.join(constants.DATASET_DIR, constants.LABELS_TO_IDX_FILENAME)
+    labels_to_indices_save_path = constants.get_dataset_labels_to_idx_path(task_type)
     print(f"Saving to {labels_to_indices_save_path}...")
     with open(labels_to_indices_save_path, "w") as f:
         json.dump(labels_to_idx, f)
@@ -119,5 +126,20 @@ if __name__ == "__main__":
     
     # --- For consistency ---
     np.random.seed(constants.RANDOM_SEED)
+    
+    # --- Read data ---
     idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
-    process_save_data(idx_to_field_data, idx_to_field_labels, data_features, labels)
+    
+    # --- Grab features/labels ---
+    train_features, train_labels, val_features, val_labels = \
+    process_hour_day_week_task(idx_to_field_data, 
+                               idx_to_field_labels, 
+                               data_features, 
+                               labels)
+    
+    # --- Save data to file ---
+    process_save_data(train_features, 
+                      train_labels, 
+                      val_features, 
+                      val_labels, 
+                      task_type=constants.HOUR_DAY_WEEK_TASK)

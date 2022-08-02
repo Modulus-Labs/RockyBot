@@ -11,15 +11,15 @@ class BTC_ETH_Hour_Day_Week_Dataset(Dataset):
     """
     Regression dataset for Eth (hour, day, week) prices, given BTC/ETH features.
     """
-    def __init__(self, mode="train"):
+    def __init__(self, mode):
         if mode == "train":
-            print(f"Setting up train BTC/ETH dataset...")
-            self.data_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_DATASET_FILENAME)
-            self.label_path = os.path.join(constants.DATASET_DIR, constants.TRAIN_LABELS_FILENAME)
+            print(f"Setting up train hour/day/week dataset (with Bitcoin future prices)...")
+            self.data_path = constants.get_dataset_train_filepath(constants.HOUR_DAY_WEEK_TASK)
+            self.label_path = constants.get_dataset_train_labelpath(constants.HOUR_DAY_WEEK_TASK)
         elif mode == "val":
-            print(f"Setting up val BTC/ETH dataset...")
-            self.data_path = os.path.join(constants.DATASET_DIR, constants.VAL_DATASET_FILENAME)
-            self.label_path = os.path.join(constants.DATASET_DIR, constants.VAL_LABELS_FILENAME)
+            print(f"Setting up val hour/day/week dataset (with Bitcoin future prices)...")
+            self.data_path = constants.get_dataset_val_filepath(constants.HOUR_DAY_WEEK_TASK)
+            self.label_path = constants.get_dataset_val_labelpath(constants.HOUR_DAY_WEEK_TASK)
         else:
             print(f"Error: mode should be one of [train, val] but got {mode} instead.")
 

@@ -88,14 +88,14 @@ def get_train_args():
     return args
 
 
-def get_classify_eval_args():
+def get_eval_args():
     """
-    Args for `classify_eval.py`.
+    Args for `eval.py`.
     """
     parser = argparse.ArgumentParser()
 
     # --- Model ---
-    parser.add_argument("--model-type", type=str, required=True, 
+    parser.add_argument("--model-type", type=str,
                         help=get_help_string("Model type.",
                                              choices=list(models.MODEL_TYPES.keys()),
                                              default=constants.SIMPLE_3_LAYER_NN),

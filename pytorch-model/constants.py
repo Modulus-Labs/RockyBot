@@ -6,12 +6,12 @@ LABEL_FIELDS = ["eth_nexthourprice", "eth_nextdayprice", "eth_nextweekprice"]
 DATASET_DIR = "datasets"
 
 # --- Dataset stuff ---
-TRAIN_DATASET_FILENAME = "eth_btc_train.npy"
-VAL_DATASET_FILENAME = "eth_btc_val.npy"
-TRAIN_LABELS_FILENAME = "eth_btc_train_labels.npy"
-VAL_LABELS_FILENAME = "eth_btc_val_labels.npy"
-FEATURES_TO_IDX_FILENAME = "eth_btc_feature_idx.json"
-LABELS_TO_IDX_FILENAME = "eth_btc_label_idx.json"
+TRAIN_DATASET_FILENAME = "train.npy"
+VAL_DATASET_FILENAME = "val.npy"
+TRAIN_LABELS_FILENAME = "train_labels.npy"
+VAL_LABELS_FILENAME = "val_labels.npy"
+FEATURES_TO_IDX_FILENAME = "feature_idx.json"
+LABELS_TO_IDX_FILENAME = "label_idx.json"
 
 # --- General ---
 RANDOM_SEED = 420
@@ -35,6 +35,20 @@ def get_model_dir(task_name, model_type, model_name):
     return os.path.join(f"{task_name}_task", model_type, model_name)
 def get_viz_dir(task_name, model_type, model_name):
     return os.path.join(f"{task_name}_viz", model_type, model_name)
+
+# --- Datasets are saved under datasets/{task_type}/{files} ---
+def get_dataset_train_filepath(task_type):
+    return os.path.join(DATASET_DIR, task_type, TRAIN_DATASET_FILENAME)
+def get_dataset_train_labelpath(task_type):
+    return os.path.join(DATASET_DIR, task_type, TRAIN_LABELS_FILENAME)
+def get_dataset_val_filepath(task_type):
+    return os.path.join(DATASET_DIR, task_type, VAL_DATASET_FILENAME)
+def get_dataset_val_labelpath(task_type):
+    return os.path.join(DATASET_DIR, task_type, VAL_LABELS_FILENAME)
+def get_dataset_features_to_idx_path(task_type):
+    return os.path.join(DATASET_DIR, task_type, FEATURES_TO_IDX_FILENAME)
+def get_dataset_labels_to_idx_path(task_type):
+    return os.path.join(DATASET_DIR, task_type, LABELS_TO_IDX_FILENAME)
 
 # --- Default dataset ---
 HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
