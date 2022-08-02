@@ -1,0 +1,24 @@
+{
+  "name": "rockafellerbot",
+  "version": "0.1.0",
+  "description": "A bot for losing money on exchanges in a cool way",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@typechain/hardhat": "^6.1.2",
+    "hardhat": "^2.10.1",
+    "typechain": "^8.1.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.7.2",
+    "@uniswap/sdk": "^3.0.3",
+    "@uniswap/v3-core": "^1.0.1",
+    "@uniswap/v3-periphery": "^1.4.1"
+  }
+}
