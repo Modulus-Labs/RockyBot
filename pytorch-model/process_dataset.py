@@ -30,6 +30,7 @@ def read_data_from_csv():
                 if row[6] == "" or row[7] == "" or row[8] == "":
                     continue
                 skip = False
+                # --- Data has infinities in it ---
                 for x in row[1:9] + row[10:]:
                     if float(x) > 1e10:
                         skip = True
@@ -41,8 +42,8 @@ def read_data_from_csv():
                 data_features.append(row_features)
                 labels.append(row_labels)
 
-    data_features = np.asarray(data_features) / 1000
-    labels = np.asarray(labels) / 1000
+    data_features = np.asarray(data_features)
+    labels = np.asarray(labels)
 
     # --- Check for infinities ---
     for idx, row in enumerate(data_features):
@@ -125,18 +126,26 @@ def playground(idx_to_field_data, idx_to_field_labels, data_features, labels):
     print(f"week more: {week_more_stats}")
     
     # --- Do histogram ---
-    six_hour_hist_bins = [-2, -0.1, -0.075, -0.05, -0.04, -0.03, -0.02, -0.015, -0.01, -0.005, 0, 0.005, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 2]
-    six_hour_hist_bins = [-2, -0.1, -0.05, -0.03, -0.015, -0.005, 0.005, 0.015, 0.03, 0.05, 0.1, 2]
-    # six_hour_hist_bins = [-2] + list(np.arange(20) / 100 - 0.1) + [2]
+    six_hour_hist_bins = [-1500, -100, -50, -30, -15, -5, 0, 5, 15, 30, 50, 100, 1500]
     print(six_hour_hist_bins)
-    hour_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[0], 
-                             bins=[-2, -0.1, -0.05, -0.025, 0, 0.025, 0.05, 0.1, 2])
+
+    six_hour_diff = np.transpose(data_features)[0] - np.transpose(labels)[3]
+    print()
+    print(np.min(six_hour_diff))
+    print(np.max(six_hour_diff))
+    print(np.mean(six_hour_diff))
+    print(np.std(six_hour_diff))
+    print()
+    
+    eth_prices = np.transpose(data_features)[0]
+    six_hour_later_eth_prices = np.transpose(labels)[3]
+    print(np.min(eth_prices))
+    print(np.max(eth_prices))
+    print(np.mean(eth_prices))
+    print(np.std(eth_prices))
+
     six_hour_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[3],
                                  bins=six_hour_hist_bins)
-    day_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[1],
-                            bins=[-2, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 2])
-    week_hist = np.histogram(np.transpose(data_features)[0] - np.transpose(labels)[2],
-                             bins=[-2, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 2])
     
     print()
     print(hour_hist[0])
@@ -173,7 +182,7 @@ def process_classification_no_context_task(idx_to_field_data,
     
     # --- Picks ONLY the 6-hours-ahead price data delta as labels ---
     labels = np.transpose(labels)[3] - np.transpose(labels)[0]
-    six_hour_hist_bins = [-2, -0.1, -0.05, -0.03, -0.015, -0.005, 0, 0.005, 0.015, 0.03, 0.05, 0.1, 2]
+    six_hour_hist_bins = [-1500, -100, -50, -30, -15, -5, 0, 5, 15, 30, 50, 100, 1500]
     new_labels = np.zeros_like(labels)
     for label_idx, label in enumerate(labels):
         for bin_idx in range(len(six_hour_hist_bins) - 1):
@@ -183,7 +192,7 @@ def process_classification_no_context_task(idx_to_field_data,
 
     # --- Doing a 10 to 1 (non-random) split ---
     split_idx = int(len(data_features) * 9 / 10)
-    
+
     # --- Extract elements ---
     val_features = data_features[split_idx:]
     val_labels = new_labels[split_idx:]
@@ -246,10 +255,14 @@ def process_save_data(train_features,
                       task_type):
     
     # --- Save to files ---
-    train_features_save_path = constants.get_dataset_train_filepath(task_type)
-    train_labels_save_path = constants.get_dataset_train_labelpath(task_type)
-    val_features_save_path = constants.get_dataset_val_filepath(task_type)
-    val_labels_save_path = constants.get_dataset_val_labelpath(task_type)
+    train_features_save_path = constants.get_dataset_filepath(
+        task_type, constants.TRAIN_DATASET_FILENAME, create=True)
+    train_labels_save_path = constants.get_dataset_filepath(
+        task_type, constants.TRAIN_LABELS_FILENAME, create=True)
+    val_features_save_path = constants.get_dataset_filepath(
+        task_type, constants.VAL_DATASET_FILENAME, create=True)
+    val_labels_save_path = constants.get_dataset_filepath(
+        task_type, constants.VAL_LABELS_FILENAME, create=True)
     
     print(f"Saving to {train_features_save_path}...")
     with open(train_features_save_path, "wb") as f:
@@ -277,12 +290,14 @@ def process_save_data(train_features,
         labels_to_idx[label] = idx
     
     # --- Save labels/features + associated indices ---
-    features_to_indices_save_path = constants.get_dataset_features_to_idx_path(task_type)
+    features_to_indices_save_path = constants.get_dataset_filepath(
+        task_type, constants.FEATURES_TO_IDX_FILENAME, create=True)
     print(f"Saving to {features_to_indices_save_path}...")
     with open(features_to_indices_save_path, "w") as f:
         json.dump(features_to_idx, f)
     
-    labels_to_indices_save_path = constants.get_dataset_labels_to_idx_path(task_type)
+    labels_to_indices_save_path = constants.get_dataset_filepath(
+        task_type, constants.LABELS_TO_IDX_FILENAME, create=True)
     print(f"Saving to {labels_to_indices_save_path}...")
     with open(labels_to_indices_save_path, "w") as f:
         json.dump(labels_to_idx, f)
@@ -325,6 +340,6 @@ if __name__ == "__main__":
                       val_labels, 
                       idx_to_field_data,
                       idx_to_field_labels,
-                      task_type=constants.CLASSIFICATION_NO_CONTEXT_TASK)
+                      task_type=constants.CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK)
                       # task_type=constants.HDW_NO_CONTEXT_TASK)
                       # task_type=constants.HOUR_DAY_WEEK_TASK)
