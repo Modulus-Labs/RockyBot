@@ -26,11 +26,11 @@ def train_one_epoch(model, train_dataloader, criterion, opt, args):
 
     # --- Time to train! ---
     total_loss = 0
-    total_residual = 0
+    total_correct = 0
     total_examples = 0
     
     avg_loss = None
-    avg_residual = None
+    avg_acc = None
 
     model.train()
 
@@ -50,20 +50,20 @@ def train_one_epoch(model, train_dataloader, criterion, opt, args):
         opt.step()
 
         # --- Bookkeeping ---
-        residuals = torch.abs(y - logits)
+        _, predicted = torch.max(logits.data, 1)
+        total_correct += (predicted == y).sum().item()
 
         total_loss += loss.item()
-        total_residual += torch.sum(residuals).item()
         total_examples += y.shape[0]
         
         avg_loss = total_loss / total_examples
-        avg_residual = total_residual / total_examples
+        avg_acc = total_correct / total_examples
 
         # if idx % args.print_every_train_minibatch == 0:
-        #     tqdm.write(f"Train minibatch number: {idx} | Avg loss: {avg_loss} | Avg residual: {avg_residual}")
+        #     tqdm.write(f"Train minibatch number: {idx} | Avg loss: {avg_loss} | Avg acc: {avg_acc}")
 
 
-    return avg_loss, avg_residual, total_examples
+    return avg_loss, avg_acc, total_examples
 
 
 def eval_model(model, val_dataloader, criterion, args):
@@ -72,11 +72,11 @@ def eval_model(model, val_dataloader, criterion, args):
     """
     print("\n" + ("-" * 30) + " Evaluating model! " + ("-" * 30))
     total_loss = 0
-    total_residual = 0
+    total_correct = 0
     total_examples = 0
     
     avg_loss = None
-    avg_residual = None
+    avg_acc = None
 
     model.eval()
 
@@ -92,19 +92,19 @@ def eval_model(model, val_dataloader, criterion, args):
             loss = criterion(logits, y)
 
             # --- Bookkeeping ---
-            residuals = torch.abs(y - logits)
+            _, predicted = torch.max(logits.data, 1)
+            total_correct += (predicted == y).sum().item()
 
             total_loss += loss.item()
-            total_residual += torch.sum(residuals).item()
             total_examples += y.shape[0]
 
             avg_loss = total_loss / total_examples
-            avg_residual = total_residual / total_examples
+            avg_acc = total_correct / total_examples
             
             # if idx % args.print_every_eval_minibatch == 0:
-            #     tqdm.write(f"Val minibatch number: {idx} | Avg loss: {avg_loss} | Avg residual: {avg_residual}")
+            #     tqdm.write(f"Val minibatch number: {idx} | Avg loss: {avg_loss} | Avg acc: {avg_acc}")
 
-    return avg_loss, avg_residual, total_examples
+    return avg_loss, avg_acc, total_examples
 
 
 def train(args, model, train_dataloader, val_dataloader, criterion, opt):
@@ -113,9 +113,9 @@ def train(args, model, train_dataloader, val_dataloader, criterion, opt):
     """
     print("\n--- Begin training! ---\n")
     train_losses = dict()
-    train_residuals = dict()
+    train_accs = dict()
     val_losses = dict()
-    val_residuals = dict()
+    val_accs = dict()
     viz_path = constants.get_model_dir(args.dataset, args.model_type, args.model_name)
     model_save_dir = constants.get_viz_dir(args.dataset, args.model_type, args.model_name)
 
@@ -123,27 +123,27 @@ def train(args, model, train_dataloader, val_dataloader, criterion, opt):
 
         if epoch % args.eval_every == 0:
             # --- Time to evaluate! ---
-            val_avg_loss, val_avg_residual, _ = eval_model(model, val_dataloader, criterion, args)
+            val_avg_loss, val_avg_acc, _ = eval_model(model, val_dataloader, criterion, args)
             val_losses[epoch] = val_avg_loss
-            val_residuals[epoch] = val_avg_residual
+            val_accs[epoch] = val_avg_acc
             
             # --- Report and plot losses/ious ---
-            print(f" Val avg loss: {val_avg_loss} | Val avg residual: {val_avg_residual}\n")
+            print(f" Val avg loss: {val_avg_loss} | Val avg acc: {val_avg_acc}\n")
             # viz_utils.plot_losses_ious(val_losses, val_ious, viz_path, prefix="val")
             
         # --- Train ---
-        train_avg_loss, train_avg_residual, _ = train_one_epoch(model, train_dataloader, criterion, opt, args)
-        train_losses[epoch] = train_avg_residual
-        train_residuals[epoch] = train_avg_loss
+        train_avg_loss, train_avg_acc, _ = train_one_epoch(model, train_dataloader, criterion, opt, args)
+        train_losses[epoch] = train_avg_acc
+        train_accs[epoch] = train_avg_loss
 
         # --- Print results ---
         if epoch % args.print_every == 0:
-            print(f"Epoch: {epoch} | Train avg loss: {train_avg_loss} | Train avg residual: {train_avg_residual}")
+            print(f"Epoch: {epoch} | Train avg loss: {train_avg_loss} | Train avg acc: {train_avg_acc}")
 
         # --- Plot loss/metrics so far (TODO: do this every epoch?) ---
         # --- Then save all train stats ---
-        # viz_utils.plot_losses_ious(train_losses, train_residuals, viz_path, prefix="train")
-        save_train_stats(train_losses, train_residuals, val_losses, val_residuals, args)
+        # viz_utils.plot_losses_ious(train_losses, train_accs, viz_path, prefix="train")
+        save_train_stats(train_losses, train_accs, val_losses, val_accs, args)
         
         # --- Only save actual model files every so often ---
         if epoch % args.save_every == 0:
@@ -151,18 +151,18 @@ def train(args, model, train_dataloader, val_dataloader, criterion, opt):
             print(f"Saving model to {model_save_path}...")
             torch.save(model.state_dict(), model_save_path)
 
-    return train_losses, train_residuals, val_losses, val_residuals
+    return train_losses, train_accs, val_losses, val_accs
 
 
-def save_train_stats(train_losses, train_residuals, val_losses, val_residuals, args):
+def save_train_stats(train_losses, train_accs, val_losses, val_accs, args):
     """Save train stats"""
 
     model_save_dir = constants.get_model_dir(args.dataset, args.model_type, args.model_name)
     train_stats = {
         "train_losses": train_losses,
-        "train_residuals": train_residuals,
+        "train_accs": train_accs,
         "val_losses": val_losses,
-        "val_residuals": val_residuals,
+        "val_accs": val_accs,
         "model_type": args.model_type,
         "learning_rate": args.lr,
         "optimizer": args.optimizer,
@@ -223,11 +223,11 @@ def main():
     opt = torch.optim.Adam(model.parameters(), lr=args.lr)
     
     # --- Loss fn ---
-    criterion = nn.MSELoss()#.cuda(constants.GPU)
+    criterion = nn.CrossEntropyLoss(weight=train_dataset.get_weights())#.cuda(constants.GPU)
     print("Done!\n")
 
     # --- Train ---
-    train_losses, train_residuals, val_losses, val_residuals =\
+    train_losses, train_accs, val_losses, val_accs =\
         train(args, model, train_dataloader, val_dataloader, criterion, opt)
 
     # --- Save model ---
@@ -240,7 +240,7 @@ def main():
     # viz_utils.plot_losses_ious(val_losses, val_ious, viz_save_dir, prefix="val")
     
     # --- Do a final train stats save ---
-    save_train_stats(train_losses, train_residuals, val_losses, val_residuals, args)
+    save_train_stats(train_losses, train_accs, val_losses, val_accs, args)
 
 
 if __name__ == "__main__":

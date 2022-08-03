@@ -53,7 +53,12 @@ HDW_NO_CONTEXT_TASK = "btc_eth_hdw_no_context"
 CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK = "btc_eth_classification_eth_6hr_no_context"
 # In theory, the best one. With context and classification
 CLASSIFICATION_ETH_6HR_TASK = "btc_eth_classification_eth_6hr"
+# Ryan will just play around with this until it works
+PLAYGROUND_TASK = "playground_task"
 
 # --- Models ---
 SIMPLE_3_LAYER_NN = "simple_3_layer_nn"
-SIMPLE_3_LAYER_CLASSIFIER = "simple_3_layer_nn"
+SIMPLE_3_LAYER_CLASSIFIER = "simple_3_layer_classifier"
+SIMPLE_5_LAYER_CLASSIFIER = "simple_5_layer_classifier"
+SIMPLE_RNN = "simple_rnn"
+SIMPLE_LSTM = "simple_lstm"
