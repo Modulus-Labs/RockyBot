@@ -1,4 +1,5 @@
 import glob
+import json
 import numpy as np
 import os
 import torch
@@ -45,6 +46,16 @@ class BTC_ETH_Hour_Day_Week_Dataset(Dataset):
             self.x = torch.from_numpy(np.load(f)).float()
         with open(self.label_path, "rb") as f:
             self.y = torch.from_numpy(np.load(f)).float()
+        
+        # --- Load in label semantics ---
+        self.features_to_idx_path = constants.get_dataset_filepath(
+            constants.HOUR_DAY_WEEK_TASK, constants.FEATURES_TO_IDX_FILENAME)
+        self.labels_to_idx_path = constants.get_dataset_filepath(
+            constants.HOUR_DAY_WEEK_TASK, constants.LABELS_TO_IDX_FILENAME)
+        with open(self.features_to_idx_path, "r") as f:
+            self.features_to_idx = json.load(f)
+        with open(self.labels_to_idx_path, "r") as f:
+            self.labels_to_idx = json.load(f)
 
     def get_input_dim(self):
         return self.x.shape[1]
@@ -85,6 +96,16 @@ class HDW_No_Context_Dataset(Dataset):
         with open(self.label_path, "rb") as f:
             self.y = torch.from_numpy(np.load(f)).float()
 
+        # --- Load in label semantics ---
+        self.features_to_idx_path = constants.get_dataset_filepath(
+            constants.HDW_NO_CONTEXT_TASK, constants.FEATURES_TO_IDX_FILENAME)
+        self.labels_to_idx_path = constants.get_dataset_filepath(
+            constants.HDW_NO_CONTEXT_TASK, constants.LABELS_TO_IDX_FILENAME)
+        with open(self.features_to_idx_path, "r") as f:
+            self.features_to_idx = json.load(f)
+        with open(self.labels_to_idx_path, "r") as f:
+            self.labels_to_idx = json.load(f)
+
     def get_input_dim(self):
         return self.x.shape[1]
 
@@ -124,10 +145,17 @@ class Classification_Eth_6hr_No_Context_Dataset(Dataset):
         with open(self.label_path, "rb") as f:
             self.y = torch.from_numpy(np.load(f)).long()
 
-        print(self.x.shape, self.y.shape)
-
-        
         self.num_classes = int(torch.max(self.y).item() + 1)
+        
+        # --- Load in label semantics ---
+        self.features_to_idx_path = constants.get_dataset_filepath(
+            constants.CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK, constants.FEATURES_TO_IDX_FILENAME)
+        self.labels_to_idx_path = constants.get_dataset_filepath(
+            constants.CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK, constants.LABELS_TO_IDX_FILENAME)
+        with open(self.features_to_idx_path, "r") as f:
+            self.features_to_idx = json.load(f)
+        with open(self.labels_to_idx_path, "r") as f:
+            self.labels_to_idx = json.load(f)
 
     def get_input_dim(self):
         return self.x.shape[1]
@@ -174,6 +202,16 @@ class Classification_Eth_6hr_Dataset(Dataset):
 
         self.num_classes = int(torch.max(self.y).item() + 1)
 
+        # --- Load in label semantics ---
+        self.features_to_idx_path = constants.get_dataset_filepath(
+            constants.CLASSIFICATION_ETH_6HR_TASK, constants.FEATURES_TO_IDX_FILENAME)
+        self.labels_to_idx_path = constants.get_dataset_filepath(
+            constants.CLASSIFICATION_ETH_6HR_TASK, constants.LABELS_TO_IDX_FILENAME)
+        with open(self.features_to_idx_path, "r") as f:
+            self.features_to_idx = json.load(f)
+        with open(self.labels_to_idx_path, "r") as f:
+            self.labels_to_idx = json.load(f)
+
     def get_weights(self):
         return get_weights(self.y)
 
@@ -217,6 +255,16 @@ class Playground_Dataset(Dataset):
             self.y = torch.from_numpy(np.load(f)).long()
 
         self.num_classes = int(torch.max(self.y).item() + 1)
+        
+        # --- Load in label semantics ---
+        self.features_to_idx_path = constants.get_dataset_filepath(
+            constants.PLAYGROUND_TASK, constants.FEATURES_TO_IDX_FILENAME)
+        self.labels_to_idx_path = constants.get_dataset_filepath(
+            constants.PLAYGROUND_TASK, constants.LABELS_TO_IDX_FILENAME)
+        with open(self.features_to_idx_path, "r") as f:
+            self.features_to_idx = json.load(f)
+        with open(self.labels_to_idx_path, "r") as f:
+            self.labels_to_idx = json.load(f)
 
     def get_weights(self):
         return get_weights(self.y)
