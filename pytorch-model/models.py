@@ -92,9 +92,55 @@ class Simple_5_Layer_Classifier(nn.Module):
         return out
 
 
+class Simple_LSTM_Classifier(nn.Module):
+    """
+    LSTM-based classifier for ETH/BTC dataset.
+    
+    > Note that we are letting the LSTM have its independent h- and c-dims, and
+    are then taking the outputs and projecting them onto our classification.
+    > We are also taking only the final layer to train our network.
+    
+    From torch docs:
+    rnn = nn.LSTM(input_size=10, hidden_size=20, num_layers=2)
+    input = torch.randn(5, 3, 10)
+    h0 = torch.randn(2, 3, 20)
+    c0 = torch.randn(2, 3, 20)
+    output, (hn, cn) = rnn(input, (h0, c0))
+    """
+    def __init__(self, dataset_ref, c_dim=256):
+
+        super(Simple_LSTM_Classifier, self).__init__()
+
+        # --- Save the dims ---
+        self.in_dim = dataset_ref.get_input_dim()
+        self.out_dim = dataset_ref.get_output_dim()
+        self.c_dim = c_dim
+        
+        print(self.in_dim, self.out_dim, self.c_dim)
+        
+        # --- Layers ---
+        self.lstm = nn.LSTM(input_size=self.in_dim, hidden_size=self.c_dim)
+        self.output_projection = nn.Linear(in_features=self.c_dim, out_features=self.out_dim)
+
+    def forward(self, x):
+        # --- x \in (N, L, H_dim) ---
+        # --- outputs \in (L, N, H_dim) ---
+        x = torch.transpose(x, 0, 1)
+        outputs, (h_n, c_n) = self.lstm(x)
+        
+        # --- Only classify the last layer ---
+        out = self.output_projection(outputs)
+        
+        # --- out: (L, N, output_dim) ---
+        # --- First transpose: (N, L, output_dim)
+        # --- second transpose (N, output_dim, L) ---
+        return torch.transpose(torch.transpose(out, 0, 1), 1, 2)
+
+
 # --- For argparse ---
 MODEL_TYPES = {
     constants.SIMPLE_3_LAYER_NN: Simple_3_Layer_NN,
     constants.SIMPLE_3_LAYER_CLASSIFIER: Simple_3_Layer_Classifier,
     constants.SIMPLE_5_LAYER_CLASSIFIER: Simple_5_Layer_Classifier,
+    constants.SIMPLE_LSTM: Simple_LSTM_Classifier,
 }

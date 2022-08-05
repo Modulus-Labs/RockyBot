@@ -178,12 +178,27 @@ def process_playground_task(idx_to_field_data,
                                                                                     data_features, 
                                                                                     labels)
 
+    # --- Cuts remainder of BTC features from features ---
+    data_features = np.transpose(np.transpose(data_features)[:-5])
+    idx_to_field_data = idx_to_field_data[:-5]
+    
+    # --- Creates new dataset by taking cuts from features ---
+    # (L, D)
+    new_data_features = list()
+    for idx in range(len(data_features) - 36):
+        new_data_features.append(data_features[idx:idx + 36])
+    new_data_features = np.stack(new_data_features)
+    # labels = labels[:-36]
+    # print(new_data_features.shape)
+    # print(labels.shape)
+    # --------------------------------------------------------
+    
     # --- Creates new feature sets (Eth price from 1-24 hours ago) ---
-    all_eth_hours_ago = list()
-    for ago in range(1, 25):
-        eth_hours_ago = np.transpose(data_features)[0][:-ago][24 - ago:]
-        eth_hours_ago = eth_hours_ago.reshape(1, len(eth_hours_ago))
-        all_eth_hours_ago.append(eth_hours_ago)
+    # all_eth_hours_ago = list()
+    # for ago in range(1, 25):
+    #     eth_hours_ago = np.transpose(data_features)[0][:-ago][24 - ago:]
+    #     eth_hours_ago = eth_hours_ago.reshape(1, len(eth_hours_ago))
+    #     all_eth_hours_ago.append(eth_hours_ago)
 
     # eth_six_hours_ago = np.transpose(data_features)[0][:-6][18:]
     # eth_twelve_hours_ago = np.transpose(data_features)[0][:-12][12:]
@@ -195,15 +210,15 @@ def process_playground_task(idx_to_field_data,
     # eth_eighteen_hours_ago = eth_eighteen_hours_ago.reshape(1, len(eth_eighteen_hours_ago))
     # eth_twentyfour_hours_ago = eth_twentyfour_hours_ago.reshape(1, len(eth_twentyfour_hours_ago))
 
-    data_features = np.transpose(np.concatenate(
-        [np.transpose(data_features[24:])] + all_eth_hours_ago
-        
-    ))
-    labels = labels[24:]
+    # new_data_features = np.transpose(np.concatenate(
+    #     [np.transpose(data_features[24:])] + all_eth_hours_ago  
+    # ))
+    # labels = labels[24:]
+    # ----------------------------------------------------------------
     
     # --- Adding to the idx to field data ---
-    for ago in range(1, 25):
-        idx_to_field_data.append(f"Eth price {ago} hours ago")
+    # for ago in range(1, 25):
+    #     idx_to_field_data.append(f"Eth price {ago} hours ago")
     # idx_to_field_data.append("eth_price_six_hours_ago")
     # idx_to_field_data.append("eth_price_twelve_hours_ago")
     # idx_to_field_data.append("eth_price_eighteen_hours_ago")
@@ -211,7 +226,13 @@ def process_playground_task(idx_to_field_data,
 
     # --- Picks ONLY the 6-hours-ahead price data delta as labels ---
     labels = np.transpose(labels)[3] - np.transpose(labels)[0]
-    six_hour_hist_bins = [-1800, -100, -50, -30, -15, -5, 0, 5, 15, 30, 50, 100, 1800]
+    
+    # bins = [-1800, -50, -15, 0, 15, 50, 1800]
+    # print(np.histogram(labels, bins=bins))
+    # exit()
+    
+    # six_hour_hist_bins = [-1800, -100, -50, -30, -15, -5, 0, 5, 15, 30, 50, 100, 1800]
+    six_hour_hist_bins = [-1800, -50, -15, 0, 15, 50, 1800]
     new_labels = list()
     for label_idx, label in enumerate(labels):
         for bin_idx in range(len(six_hour_hist_bins) - 1):
@@ -220,14 +241,24 @@ def process_playground_task(idx_to_field_data,
                 break
 
     new_labels = np.asarray(new_labels, dtype=np.int64)
+    
+    # --- New labels which are a sequence of the original labels ---
+    new_data_features = new_data_features[:-1]
+    temp_label_list = list()
+    for idx in range(len(new_labels) - 36 - 1):
+        temp_label_list.append(new_labels[idx + 1:idx + 36 + 1])
+    new_labels = np.stack(temp_label_list)
+    print(new_data_features.shape)
+    print(new_labels.shape)
+    # --------------------------------------------------------------
 
     # --- Doing a 10 to 1 (non-random) split ---
-    split_idx = int(len(data_features) * 9 / 10)
+    split_idx = int(len(new_data_features) * 9 / 10)
 
     # --- Extract elements ---
-    val_features = data_features[split_idx:]
+    val_features = new_data_features[split_idx:]
     val_labels = new_labels[split_idx:]
-    train_features = data_features[:split_idx]
+    train_features = new_data_features[:split_idx]
     train_labels = new_labels[:split_idx]
 
     # --- Return the bins as the new label fields ---
@@ -464,18 +495,7 @@ if __name__ == "__main__":
     
     # --- Grab features/labels ---
     train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
-    process_classification_task(idx_to_field_data,
-                                           idx_to_field_labels, 
-                                           data_features, 
-                                           labels)
-    # process_hdw_no_context_task(idx_to_field_data, 
-    #                            idx_to_field_labels, 
-    #                            data_features, 
-    #                            labels)
-    # process_hour_day_week_task(idx_to_field_data, 
-    #                            idx_to_field_labels, 
-    #                            data_features, 
-    #                            labels)
+    process_playground_task(idx_to_field_data, idx_to_field_labels, data_features, labels)
 
     # --- Save data to file ---
     process_save_data(train_features, 
@@ -484,7 +504,4 @@ if __name__ == "__main__":
                       val_labels, 
                       idx_to_field_data,
                       idx_to_field_labels,
-                      task_type=constants.CLASSIFICATION_ETH_6HR_TASK)
-                      # task_type=constants.CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK)
-                      # task_type=constants.HDW_NO_CONTEXT_TASK)
-                      # task_type=constants.HOUR_DAY_WEEK_TASK)
+                      task_type=constants.PLAYGROUND_TASK)

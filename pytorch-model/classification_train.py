@@ -54,7 +54,7 @@ def train_one_epoch(model, train_dataloader, criterion, opt, args):
         total_correct += (predicted == y).sum().item()
 
         total_loss += loss.item()
-        total_examples += y.shape[0]
+        total_examples += y.shape[0] * y.shape[1]
         
         avg_loss = total_loss / total_examples
         avg_acc = total_correct / total_examples
@@ -96,7 +96,7 @@ def eval_model(model, val_dataloader, criterion, args):
             total_correct += (predicted == y).sum().item()
 
             total_loss += loss.item()
-            total_examples += y.shape[0]
+            total_examples += y.shape[0] * y.shape[1]
 
             avg_loss = total_loss / total_examples
             avg_acc = total_correct / total_examples

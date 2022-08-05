@@ -192,22 +192,21 @@ class Classification_Eth_6hr_Dataset(Dataset):
 
 class Playground_Dataset(Dataset):
     """
-    Classification dataset for Eth +6 hr prices, WITH previous price context.
-    No future BTC price given.
+    Subject to change!
     """
     def __init__(self, mode):
         if mode == "train":
             print(f"Setting up train playground dataset...")
             self.data_path = constants.get_dataset_filepath(
-                constants.CLASSIFICATION_ETH_6HR_TASK, constants.TRAIN_DATASET_FILENAME)
+                constants.PLAYGROUND_TASK, constants.TRAIN_DATASET_FILENAME)
             self.label_path = constants.get_dataset_filepath(
-                constants.CLASSIFICATION_ETH_6HR_TASK, constants.TRAIN_LABELS_FILENAME)
+                constants.PLAYGROUND_TASK, constants.TRAIN_LABELS_FILENAME)
         elif mode == "val":
             print(f"Setting up val playground dataset...")
             self.data_path = constants.get_dataset_filepath(
-                constants.CLASSIFICATION_ETH_6HR_TASK, constants.VAL_DATASET_FILENAME)
+                constants.PLAYGROUND_TASK, constants.VAL_DATASET_FILENAME)
             self.label_path = constants.get_dataset_filepath(
-                constants.CLASSIFICATION_ETH_6HR_TASK, constants.VAL_LABELS_FILENAME)
+                constants.PLAYGROUND_TASK, constants.VAL_LABELS_FILENAME)
         else:
             print(f"Error: mode should be one of [train, val] but got {mode} instead.")
 
@@ -223,7 +222,7 @@ class Playground_Dataset(Dataset):
         return get_weights(self.y)
 
     def get_input_dim(self):
-        return self.x.shape[1]
+        return self.x.shape[-1]
 
     def get_output_dim(self):
         return self.num_classes
@@ -241,4 +240,5 @@ DATASETS = {
     constants.HDW_NO_CONTEXT_TASK: HDW_No_Context_Dataset,
     constants.CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK: Classification_Eth_6hr_No_Context_Dataset,
     constants.CLASSIFICATION_ETH_6HR_TASK: Classification_Eth_6hr_Dataset,
+    constants.PLAYGROUND_TASK: Playground_Dataset,
 }
