@@ -9,7 +9,7 @@ class Simple_3_Layer_NN(nn.Module):
     """
     3-Layer regression NN for ETH/BTC dataset.
     """
-    def __init__(self, dataset_ref, h1_dim=128, h2_dim=128):
+    def __init__(self, dataset_ref, h1_dim=64, h2_dim=64):
 
         super(Simple_3_Layer_NN, self).__init__()
 
@@ -21,14 +21,20 @@ class Simple_3_Layer_NN(nn.Module):
         # --- Layers ---
         self.linear_1 = nn.Linear(in_features=self.x_dim, out_features=self.h1_dim)
         self.activ_1 = nn.ReLU()
+        # self.dropout_1 = torch.nn.Dropout(p=0.5)
         self.linear_2 = nn.Linear(in_features=self.h1_dim, out_features=self.h2_dim)
         self.activ_2 = nn.ReLU()
+        # self.dropout_2 = torch.nn.Dropout(p=0.5)
         self.linear_3 = nn.Linear(in_features=self.h2_dim, out_features=self.out_dim)
 
-    def forward(self, x):
+    def forward(self, x):        
         h1 = self.activ_1(self.linear_1(x))
         h2 = self.activ_2(self.linear_2(h1))
         out = self.linear_3(h2)
+
+        # h1 = self.dropout_1(self.activ_1(self.linear_1(x)))
+        # h2 = self.dropout_2(self.activ_2(self.linear_2(h1)))
+        # out = self.linear_3(h2)
         return out
 
 
