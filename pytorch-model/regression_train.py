@@ -116,8 +116,8 @@ def train(args, model, train_dataloader, val_dataloader, criterion, opt):
     train_residuals = dict()
     val_losses = dict()
     val_residuals = dict()
-    viz_path = constants.get_model_dir(args.dataset, args.model_type, args.model_name)
-    model_save_dir = constants.get_viz_dir(args.dataset, args.model_type, args.model_name)
+    model_save_dir = constants.get_model_dir(args.dataset, args.model_type, args.model_name)
+    viz_path = constants.get_viz_dir(args.dataset, args.model_type, args.model_name)
 
     for epoch in range(args.num_epochs):
 

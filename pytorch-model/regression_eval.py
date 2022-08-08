@@ -24,11 +24,16 @@ def eval_model(model, val_dataloader, criterion, args):
     """
     Evaluates model over validation set.
     """
+    
+    # --- Buckets for seeing how close the classification *would* be ---
+    bins = [-1800, -15, -5, 0, 5, 15, 1800]
+    total_correct = 0
+
     print("\n" + ("-" * 30) + " Evaluating model! " + ("-" * 30))
     total_loss = 0
     total_residual = 0
     total_examples = 0
-    
+
     avg_loss = None
     avg_residual = None
 
@@ -42,6 +47,10 @@ def eval_model(model, val_dataloader, criterion, args):
             # y = y.cuda(constants.GPU, non_blocking=True)
 
             # --- Compute logits ---
+            print(x.shape)
+            print(x[0])
+            print(x)
+            print(y)
             logits = model(x)
             loss = criterion(y, logits)
 
@@ -54,6 +63,28 @@ def eval_model(model, val_dataloader, criterion, args):
 
             avg_loss = total_loss / total_examples
             avg_residual = total_residual / total_examples
+            
+            # --- Computing the presumed classification accuracy ---
+            label_diff_buckets = list()
+            for label in y:
+                for bin_idx in range(len(bins) - 1):
+                    if label >= bins[bin_idx] and label < bins[bin_idx + 1]:
+                        label_diff_buckets.append(bin_idx)
+                        break
+            label_diff_buckets = torch.from_numpy(np.asarray(label_diff_buckets))
+
+            output_diff_buckets = list()
+            for pred_price_diff in logits:
+                print(pred_price_diff)
+                for bin_idx in range(len(bins) - 1):
+                    if pred_price_diff >= bins[bin_idx] and pred_price_diff < bins[bin_idx + 1]:
+                        output_diff_buckets.append(bin_idx)
+                        break
+            output_diff_buckets = torch.from_numpy(np.asarray(output_diff_buckets))
+            
+            print(label_diff_buckets)
+            print(output_diff_buckets)
+            exit()
 
     return avg_loss, avg_residual, total_examples
 

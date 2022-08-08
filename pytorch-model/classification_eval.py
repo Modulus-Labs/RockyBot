@@ -21,14 +21,18 @@ import viz_utils
 def update_confusion_matrix(confusion_matrix, y_true, y_pred):
     """
     Updates the given confusion matrix.
-    Assumes that y_true and y_pred have dimensions (B, C).
+    Assumes that y_true and y_pred have dimensions (B, C) if RNN,
+    else just (C,) if feedforward model.
     """
-    y_correct = y_true * y_pred
-    y_incorrect = (y_correct + y_pred) % 2
+    # y_correct = y_true * y_pred
+    # y_incorrect = (y_correct + y_pred) % 2
 
-    for row_y_true, row_y_pred in zip(y_true, y_pred):
-        for y_true_class, y_pred_class in zip(row_y_true, row_y_pred):
-            confusion_matrix[y_true_class, y_pred_class] += 1
+    for y_true_class, y_pred_class in zip(y_true, y_pred):
+        confusion_matrix[y_true_class, y_pred_class] += 1
+
+    # for row_y_true, row_y_pred in zip(y_true, y_pred):
+    #     for y_true_class, y_pred_class in zip(row_y_true, row_y_pred):
+    #         confusion_matrix[y_true_class, y_pred_class] += 1
 
 
 def eval_model(model, val_dataloader, criterion, args):
@@ -65,7 +69,8 @@ def eval_model(model, val_dataloader, criterion, args):
             total_correct += (predicted == y).sum().item()
 
             total_loss += loss.item()
-            total_examples += y.shape[0] * y.shape[1]
+            total_examples += y.shape[0]
+            # total_examples += y.shape[0] * y.shape[1]
 
             avg_loss = total_loss / total_examples
             avg_acc = total_correct / total_examples

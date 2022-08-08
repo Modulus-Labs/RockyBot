@@ -119,6 +119,55 @@ class HDW_No_Context_Dataset(Dataset):
         return len(self.x)
 
 
+class Playground_Regression_Dataset(Dataset):
+    """
+    Regression dataset (subject to change at Ryan's will)
+    """
+    def __init__(self, mode):
+        if mode == "train":
+            print(f"Setting up train regression playground dataset...")
+            self.data_path = constants.get_dataset_filepath(
+                constants.PLAYGROUND_REGRESSION_TASK, constants.TRAIN_DATASET_FILENAME)
+            self.label_path = constants.get_dataset_filepath(
+                constants.PLAYGROUND_REGRESSION_TASK, constants.TRAIN_LABELS_FILENAME)
+        elif mode == "val":
+            print(f"Setting up val regression playground dataset...")
+            self.data_path = constants.get_dataset_filepath(
+                constants.PLAYGROUND_REGRESSION_TASK, constants.VAL_DATASET_FILENAME)
+            self.label_path = constants.get_dataset_filepath(
+                constants.PLAYGROUND_REGRESSION_TASK, constants.VAL_LABELS_FILENAME)
+        else:
+            print(f"Error: mode should be one of [train, val] but got {mode} instead.")
+
+        # --- Load in dataset + labels ---
+        with open(self.data_path, "rb") as f:
+            self.x = torch.from_numpy(np.load(f)).float()
+        with open(self.label_path, "rb") as f:
+            self.y = torch.from_numpy(np.load(f)).float().unsqueeze(1)
+
+        # --- Load in label semantics ---
+        self.features_to_idx_path = constants.get_dataset_filepath(
+            constants.HDW_NO_CONTEXT_TASK, constants.FEATURES_TO_IDX_FILENAME)
+        self.labels_to_idx_path = constants.get_dataset_filepath(
+            constants.HDW_NO_CONTEXT_TASK, constants.LABELS_TO_IDX_FILENAME)
+        with open(self.features_to_idx_path, "r") as f:
+            self.features_to_idx = json.load(f)
+        with open(self.labels_to_idx_path, "r") as f:
+            self.labels_to_idx = json.load(f)
+
+    def get_input_dim(self):
+        return self.x.shape[1]
+
+    def get_output_dim(self):
+        return 1
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+    def __len__(self):
+        return len(self.x)
+
+
 class Classification_Eth_6hr_No_Context_Dataset(Dataset):
     """
     Classification dataset for Eth +6 hr prices. No future BTC price given.
@@ -289,4 +338,5 @@ DATASETS = {
     constants.CLASSIFICATION_ETH_6HR_NO_CONTEXT_TASK: Classification_Eth_6hr_No_Context_Dataset,
     constants.CLASSIFICATION_ETH_6HR_TASK: Classification_Eth_6hr_Dataset,
     constants.PLAYGROUND_TASK: Playground_Dataset,
+    constants.PLAYGROUND_REGRESSION_TASK: Playground_Regression_Dataset,
 }

@@ -60,17 +60,17 @@ def read_data_from_csv():
 def preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels):
     """
     > Cuts BTC prices in the future from features
-    > Creates new label column (i.e. price from 6 hours later)
+    > Creates new label column (i.e. price from 1 hour later)
     """
     # --- Cuts BTC prices in the future from features ---
     data_features = np.transpose(np.transpose(data_features)[:-3])
     idx_to_field_data = idx_to_field_data[:-3]
 
-    # --- Creates new label (ETH price 6 hours later) ---
-    new_row = np.transpose(labels)[0][6:]
-    new_row = new_row.reshape(1, len(np.transpose(labels)[0]) - 6)
-    labels = np.transpose(np.concatenate([np.transpose(labels[:-6]), new_row]))
-    data_features = data_features[:-6]
+    # --- Creates new label (ETH price 1 hour later) ---
+    new_row = np.transpose(labels)[0][1:]
+    new_row = new_row.reshape(1, len(np.transpose(labels)[0]) - 1)
+    labels = np.transpose(np.concatenate([np.transpose(labels[:-1]), new_row]))
+    data_features = data_features[:-1]
     
     return idx_to_field_data, idx_to_field_labels, data_features, labels
 
@@ -170,9 +170,13 @@ def process_playground_task(idx_to_field_data,
                             labels):
     """
     Subject to change -- Ryan will mess with this until it works.
+    
+    Previously1: Classification task for {sparse, dense}-loss LSTM
+    Previously2: Regression task for feedforward NN
+    Currently: Classification task again for feedforward network
     """
     
-    # --- Remove BTC prices from future and add in 6-hours-ahead data ---
+    # --- Remove BTC prices from future and add in 1-hour-ahead data ---
     idx_to_field_data, idx_to_field_labels, data_features, labels = preprocess_data(idx_to_field_data, 
                                                                                     idx_to_field_labels, 
                                                                                     data_features, 
@@ -182,38 +186,37 @@ def process_playground_task(idx_to_field_data,
     data_features = np.transpose(np.transpose(data_features)[:-5])
     idx_to_field_data = idx_to_field_data[:-5]
     
+    # --- Cuts everything but ETH prices from features ---
+    data_features = np.transpose(np.transpose(data_features)[:1])
+    
     # --- Creates new dataset by taking cuts from features ---
     # (L, D)
-    new_data_features = list()
-    for idx in range(len(data_features) - 36):
-        new_data_features.append(data_features[idx:idx + 36])
-    new_data_features = np.stack(new_data_features)
+    # new_data_features = list()
+    # for idx in range(len(data_features) - 36):
+    #     new_data_features.append(data_features[idx:idx + 36])
+    # new_data_features = np.stack(new_data_features)
     # labels = labels[:-36]
     # print(new_data_features.shape)
     # print(labels.shape)
     # --------------------------------------------------------
     
     # --- Creates new feature sets (Eth price from 1-24 hours ago) ---
-    # all_eth_hours_ago = list()
-    # for ago in range(1, 25):
-    #     eth_hours_ago = np.transpose(data_features)[0][:-ago][24 - ago:]
-    #     eth_hours_ago = eth_hours_ago.reshape(1, len(eth_hours_ago))
-    #     all_eth_hours_ago.append(eth_hours_ago)
+    NUM_HOURS_BACK = 36
+    all_eth_hours_ago = list()
+    for ago in range(1, NUM_HOURS_BACK + 1):
+        eth_hours_ago = np.transpose(data_features)[0][:-ago][NUM_HOURS_BACK - ago:]
+        eth_hours_ago = eth_hours_ago.reshape(1, len(eth_hours_ago))
+        all_eth_hours_ago.append(eth_hours_ago)
 
-    # eth_six_hours_ago = np.transpose(data_features)[0][:-6][18:]
-    # eth_twelve_hours_ago = np.transpose(data_features)[0][:-12][12:]
-    # eth_eighteen_hours_ago = np.transpose(data_features)[0][:-18][6:]
-    # eth_twentyfour_hours_ago = np.transpose(data_features)[0][:-24]
+    new_data_features = np.transpose(np.concatenate(
+        [np.transpose(data_features[NUM_HOURS_BACK:])] + all_eth_hours_ago
+    ))
+    labels = labels[NUM_HOURS_BACK:]
+    
+    # --- Renormalizes each row ---
+    for idx in range(len(new_data_features)):
+        new_data_features[idx] = new_data_features[idx][-1] - new_data_features[idx]
 
-    # eth_six_hours_ago = eth_six_hours_ago.reshape(1, len(eth_six_hours_ago))
-    # eth_twelve_hours_ago = eth_twelve_hours_ago.reshape(1, len(eth_twelve_hours_ago))
-    # eth_eighteen_hours_ago = eth_eighteen_hours_ago.reshape(1, len(eth_eighteen_hours_ago))
-    # eth_twentyfour_hours_ago = eth_twentyfour_hours_ago.reshape(1, len(eth_twentyfour_hours_ago))
-
-    # new_data_features = np.transpose(np.concatenate(
-    #     [np.transpose(data_features[24:])] + all_eth_hours_ago  
-    # ))
-    # labels = labels[24:]
     # ----------------------------------------------------------------
     
     # --- Adding to the idx to field data ---
@@ -224,15 +227,12 @@ def process_playground_task(idx_to_field_data,
     # idx_to_field_data.append("eth_price_eighteen_hours_ago")
     # idx_to_field_data.append("eth_price_twentyfour_hours_ago")
 
-    # --- Picks ONLY the 6-hours-ahead price data delta as labels ---
+    # --- Picks ONLY the 1-hours-ahead price data delta as labels ---
     labels = np.transpose(labels)[3] - np.transpose(labels)[0]
     
-    # bins = [-1800, -50, -15, 0, 15, 50, 1800]
-    # print(np.histogram(labels, bins=bins))
-    # exit()
-    
-    # six_hour_hist_bins = [-1800, -100, -50, -30, -15, -5, 0, 5, 15, 30, 50, 100, 1800]
-    six_hour_hist_bins = [-1800, -50, -15, 0, 15, 50, 1800]
+    # --- Performs binning ---
+    bins = [-1800, -15, -5, 0, 5, 15, 1800]
+    six_hour_hist_bins = bins
     new_labels = list()
     for label_idx, label in enumerate(labels):
         for bin_idx in range(len(six_hour_hist_bins) - 1):
@@ -243,13 +243,13 @@ def process_playground_task(idx_to_field_data,
     new_labels = np.asarray(new_labels, dtype=np.int64)
     
     # --- New labels which are a sequence of the original labels ---
-    new_data_features = new_data_features[:-1]
-    temp_label_list = list()
-    for idx in range(len(new_labels) - 36 - 1):
-        temp_label_list.append(new_labels[idx + 1:idx + 36 + 1])
-    new_labels = np.stack(temp_label_list)
-    print(new_data_features.shape)
-    print(new_labels.shape)
+    # new_data_features = new_data_features[:-1]
+    # temp_label_list = list()
+    # for idx in range(len(new_labels) - 36 - 1):
+    #     temp_label_list.append(new_labels[idx + 1:idx + 36 + 1])
+    # new_labels = np.stack(temp_label_list)
+    # print(new_data_features.shape)
+    # print(new_labels.shape)
     # --------------------------------------------------------------
 
     # --- Doing a 10 to 1 (non-random) split ---
