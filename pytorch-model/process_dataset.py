@@ -177,10 +177,8 @@ def process_playground_task(idx_to_field_data,
     """
     
     # --- Remove BTC prices from future and add in 1-hour-ahead data ---
-    idx_to_field_data, idx_to_field_labels, data_features, labels = preprocess_data(idx_to_field_data, 
-                                                                                    idx_to_field_labels, 
-                                                                                    data_features, 
-                                                                                    labels)
+    idx_to_field_data, idx_to_field_labels, data_features, labels = \
+        preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels)
 
     # --- Cuts remainder of BTC features from features ---
     data_features = np.transpose(np.transpose(data_features)[:-5])
@@ -190,7 +188,7 @@ def process_playground_task(idx_to_field_data,
     data_features = np.transpose(np.transpose(data_features)[:1])
     
     # --- Creates new dataset by taking cuts from features ---
-    # (L, D)
+    # (L, D) -- for LSTM
     # new_data_features = list()
     # for idx in range(len(data_features) - 36):
     #     new_data_features.append(data_features[idx:idx + 36])
@@ -200,10 +198,10 @@ def process_playground_task(idx_to_field_data,
     # print(labels.shape)
     # --------------------------------------------------------
     
-    # --- Creates new feature sets (Eth price from 1-24 hours ago) ---
+    # --- Creates new feature sets (Eth price DIFFS from 0-35 hours ago) ---
     NUM_HOURS_BACK = 36
     all_eth_hours_ago = list()
-    for ago in range(1, NUM_HOURS_BACK + 1):
+    for ago in range(1, NUM_HOURS_BACK):
         eth_hours_ago = np.transpose(data_features)[0][:-ago][NUM_HOURS_BACK - ago:]
         eth_hours_ago = eth_hours_ago.reshape(1, len(eth_hours_ago))
         all_eth_hours_ago.append(eth_hours_ago)
@@ -215,7 +213,7 @@ def process_playground_task(idx_to_field_data,
     
     # --- Renormalizes each row ---
     for idx in range(len(new_data_features)):
-        new_data_features[idx] = new_data_features[idx][-1] - new_data_features[idx]
+        new_data_features[idx] = new_data_features[idx][0] - new_data_features[idx]
 
     # ----------------------------------------------------------------
     
@@ -231,8 +229,9 @@ def process_playground_task(idx_to_field_data,
     labels = np.transpose(labels)[3] - np.transpose(labels)[0]
     
     # --- Performs binning ---
-    bins = [-1800, -15, -5, 0, 5, 15, 1800]
-    six_hour_hist_bins = bins
+    # bins = [-1800, -15, -5, 0, 5, 15, 1800]
+    # six_hour_hist_bins = bins
+    six_hour_hist_bins = [-1800, -30, -20, -10, -5, -2, 0, 2, 5, 10, 20, 30, 1800]
     new_labels = list()
     for label_idx, label in enumerate(labels):
         for bin_idx in range(len(six_hour_hist_bins) - 1):
