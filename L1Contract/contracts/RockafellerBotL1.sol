@@ -72,6 +72,10 @@ contract RockafellerBotL1 is Ownable {
         currentAmountWEth = 0;
     }
 
+    function updateL2Contract(uint256 _l2ContractAddress) public onlyOwner {
+        l2ContractAddress = _l2ContractAddress;
+    }
+
     function withdrawl(uint amount) public onlyOwner {
         token.transfer(msg.sender, amount);
         currentAmountUSDC -= amount;
@@ -84,7 +88,7 @@ contract RockafellerBotL1 is Ownable {
         payload[0] = instruction == TradeInstruction.BUY ? 0 : 1;
         payload[1] = amount;
 
-        //starknetCore.consumeMessageFromL2(l2ContractAddress, payload);
+        starknetCore.consumeMessageFromL2(l2ContractAddress, payload);
 
         if(instruction == TradeInstruction.BUY) {
             buyWEth(amount);

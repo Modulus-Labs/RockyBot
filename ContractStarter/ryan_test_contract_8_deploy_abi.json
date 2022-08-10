@@ -1,0 +1,102 @@
+[
+    {
+        "inputs": [
+            {
+                "name": "x_data_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "x_data_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "a_num_rows",
+                "type": "felt"
+            },
+            {
+                "name": "a_num_cols",
+                "type": "felt"
+            },
+            {
+                "name": "a_data_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "a_data_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "a_bias_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "a_bias_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "b_num_rows",
+                "type": "felt"
+            },
+            {
+                "name": "b_num_cols",
+                "type": "felt"
+            },
+            {
+                "name": "b_data_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "b_data_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "b_bias_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "b_bias_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "c_num_rows",
+                "type": "felt"
+            },
+            {
+                "name": "c_num_cols",
+                "type": "felt"
+            },
+            {
+                "name": "c_data_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "c_data_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "c_bias_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "c_bias_ptr",
+                "type": "felt*"
+            },
+            {
+                "name": "scale_factor",
+                "type": "felt"
+            }
+        ],
+        "name": "three_layer_nn",
+        "outputs": [
+            {
+                "name": "output_data_ptr_len",
+                "type": "felt"
+            },
+            {
+                "name": "output_data_ptr",
+                "type": "felt*"
+            }
+        ],
+        "type": "function"
+    }
+]

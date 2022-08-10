@@ -210,6 +210,6 @@ func ryansFunc{#syscall_ptr: felt*,
     assert return_vector[PRICE_UP_MID] = 4
     assert return_vector[PRICE_UP_LARGE] = 3
     assert return_vector[PRICE_UP_EXTREME] = 2
-    assert return_vector[PRICE_UP_MAX] = 30
+    assert return_vector[PRICE_UP_MAX] = -50
     return (weights_len=12, weights=return_vector)
 end

@@ -56,7 +56,7 @@ end
 func calculateStrategy{
     syscall_ptr : felt*,
     pedersen_ptr : HashBuiltin*,
-    range_check_ptr,
+    range_check_ptr
 }(remaining_weth: felt, remaining_usdc: felt, weth_price_ratio: felt, x_data_ptr_len : felt,
     x_data_ptr : felt*,
     a_num_rows : felt,
@@ -135,27 +135,66 @@ func calculateStrategy{
     end
     if [max_index] == PRICE_DOWN_MID:
        # assert [strategy] = SELL_STRATEGY
-       return (strategy=NULL_STRATEGY, amount=0)
+       #return (strategy=NULL_STRATEGY, amount=0)
+       if is_overflow_weth_large == 1:
+            assert [amount] = remaining_weth
+        else:
+            assert [amount] = amount_weth_large
+        end
+        assert [strategy] = SELL_STRATEGY
     end
     if [max_index] == PRICE_DOWN_SMALL:
         #assert [strategy] = SELL_STRATEGY
-        return (strategy=NULL_STRATEGY, amount=0)
+        #return (strategy=NULL_STRATEGY, amount=0)
+        if is_overflow_weth_large == 1:
+            assert [amount] = remaining_weth
+        else:
+            assert [amount] = amount_weth_large
+        end
+        assert [strategy] = SELL_STRATEGY
     end
     if [max_index] == PRICE_DOWN_MIN:
         #assert [strategy] = SELL_STRATEGY
-        return (strategy=NULL_STRATEGY, amount=0)
+        #return (strategy=NULL_STRATEGY, amount=0)
+        if is_overflow_weth_large == 1:
+            assert [amount] = remaining_weth
+        else:
+            assert [amount] = amount_weth_large
+        end
+        assert [strategy] = SELL_STRATEGY
     end
     if [max_index] == PRICE_UP_MIN:
         #assert [strategy] = BUY_STRATEGY
-        return (strategy=NULL_STRATEGY, amount=0)
+        #return (strategy=NULL_STRATEGY, amount=0)
+        if is_overflow_usdc_large == 1:
+            assert [amount] = remaining_usdc
+        else:
+            assert [amount] = amount_usdc_large
+        end
+        assert [strategy] = BUY_STRATEGY
+
     end
     if [max_index] == PRICE_UP_SMALL:
         #assert [strategy] = BUY_STRATEGY
-        return (strategy=NULL_STRATEGY, amount=0)
+        #return (strategy=NULL_STRATEGY, amount=0)
+        if is_overflow_usdc_large == 1:
+            assert [amount] = remaining_usdc
+        else:
+            assert [amount] = amount_usdc_large
+        end
+        assert [strategy] = BUY_STRATEGY
+
     end
     if [max_index] == PRICE_UP_MID:
         #assert [strategy] = BUY_STRATEGY
-        return (strategy=NULL_STRATEGY, amount=0)
+        #return (strategy=NULL_STRATEGY, amount=0)
+        if is_overflow_usdc_large == 1:
+            assert [amount] = remaining_usdc
+        else:
+            assert [amount] = amount_usdc_large
+        end
+        assert [strategy] = BUY_STRATEGY
+
     end
     if [max_index] == PRICE_UP_LARGE:
         if is_overflow_usdc_large == 1:
