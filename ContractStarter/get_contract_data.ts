@@ -4,7 +4,8 @@ import mw from './three_layer_nn_weights_epoch330.json';
 import * as fs from 'fs';
 import { join } from 'path';
 import * as aws from 'aws-sdk';
-
+import { ethers } from 'ethers';
+import { RockafellerBotL1__factory } from '../L1Contract/typechain-types/factories/contracts/RockafellerBotL1.sol/RockafellerBotL1__factory'
 /*import {
   Account,
   Contract,
@@ -17,9 +18,10 @@ import * as aws from 'aws-sdk';
 
 //const PRIME = number.toBN("3618502788666131213697322783095070105623107215331596699973092056135872020481")
 
-const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+const WETH_ADDRESS = "0x16Feac48BF8abe18a6276950A927feDb80582529";
 const LOAD_DIR = 'jsonModelData';
-const PRICE_NOW = "606826000"
+
+const L1_CONTRACT_ADDR = "0xBc6DD4a900E00De0309b2d007bDab51E0692Bc3a";
 
 
 import config from './config'
@@ -27,6 +29,8 @@ import config from './config'
 import { getTokensQuery, TokenPriceSliceData } from '../DataAquisition/scripts/get_token_price';
 
 export async function handler (): Promise<void> {
+    const provider = new ethers.providers.AlchemyProvider("goerli", "NnMaaIDS0ol9DW-uYqr6j1kHIK9W9suo");
+    const RfB = RockafellerBotL1__factory.connect(L1_CONTRACT_ADDR, provider);
     /*const sn_keypair = ec.getKeyPair(number.toBN(config.SN_PRIVATE_KEY));
     const account_address = config.SN_ACCOUNT_ADDRESS;
 
@@ -35,7 +39,7 @@ export async function handler (): Promise<void> {
 
     const L2Contract = new Contract(sn_abi as Abi, config.SN_CONTRACT_ADDRESS, sn_account);*/
 
-    var enddate: Date = new Date(Date.now() - 60*60*1000*24*2);
+    var enddate: Date = new Date(Date.now() - 60*60*1000*24*4);
 
     var startdate: Date = new Date(enddate.getTime() - 60*60*1000*36)
 
@@ -44,8 +48,12 @@ export async function handler (): Promise<void> {
     var dataPost = data.map((item: TokenPriceSliceData) => {return Math.trunc((data[0].price - item.price)*(10**8))});
 
     if(dataPost.length != 36) throw `Data gotten from TheGraph is not of sufficient length: Should be 36; actually ${dataPost.length}`;
+    var remaining_usdc = await RfB.currentAmountUSDC();
+    var remaining_weth = await RfB.currentAmountWEth();
+    var curr_price = data[0].price;
+    var price_ratio = Math.trunc((1/curr_price)*(10**12))
 
-    const body = { price_ratio: PRICE_NOW, remaining_usdc: "606826000", remaining_weth: "1000000000000000000", data_len: dataPost.length, data: dataPost, 
+    const body = { price_ratio: price_ratio, remaining_usdc: remaining_usdc.toString(), remaining_weth: remaining_weth.toString(), data_len: dataPost.length, data: dataPost, 
       a_num_rows: mw.a_num_rows, a_num_cols: mw.a_num_cols, a_data_ptr_len: mw.a_data_ptr_len, a_data_ptr: mw.a_data_ptr,  a_bias_ptr_len: mw.a_bias_ptr_len, a_bias_ptr: mw.a_bias_ptr,
       b_num_rows: mw.b_num_rows, b_num_cols: mw.b_num_cols, b_data_ptr_len: mw.b_data_ptr_len, b_data_ptr: mw.b_data_ptr,  b_bias_ptr_len: mw.b_bias_ptr_len, b_bias_ptr: mw.b_bias_ptr,
       c_num_rows: mw.c_num_rows, c_num_cols: mw.c_num_cols, c_data_ptr_len: mw.c_data_ptr_len, c_data_ptr: mw.c_data_ptr,  c_bias_ptr_len: mw.c_bias_ptr_len, c_bias_ptr: mw.c_bias_ptr,}

@@ -3,7 +3,7 @@ import subprocess
 import os
 import boto3
 TEST_CONTRACT_8_ADDR = "0x03850a70be09eecac8b291112c0b28cf0799de385a2c22ad409761b750c70ef5"
-TEST_CONTRACT_REAL_ADDR = "0x001db46ee87c53620d48f894a3a988a6cdbb19ecace7aaee99060528b921c4cb"
+TEST_CONTRACT_REAL_ADDR = "0x067ac66e2fe22627bb900cc61152b7db3a7ec31d82d1577bfc54790341899921"
 ABI_8_FILEPATH = "./ryan_test_contract_8_deploy_abi.json"
 ABI_REAL_FILEPATH = "../L2ContractHelper/compiled/contract_abi.json"
 SCALE_FACTOR = 1e8

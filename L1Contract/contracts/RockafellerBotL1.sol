@@ -6,7 +6,7 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+//import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 
 enum TradeInstruction {
     BUY,
@@ -39,32 +39,34 @@ interface IStarknetCore {
 contract RockafellerBotL1 is Ownable {
     ISwapRouter public immutable swapRouter;
     IStarknetCore public immutable starknetCore;
-    IERC20 public immutable token;
+    IERC20 public immutable usdc;
+    IERC20 public immutable weth;
 
     uint256 public l2ContractAddress;
 
     uint public currentAmountUSDC;
     uint public currentAmountWEth;
 
-    address public constant WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    //address public constant WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     //mainnet
     //address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     //goerli
-    address public constant USDC = 0x07865c6E87B9F70255377e024ace6630C1Eaa37F;
+    //address public constant USDC = 0x07865c6E87B9F70255377e024ace6630C1Eaa37F;
 
     uint24 public constant poolFee = 3000;
 
     event receivedFunds(address sender, uint amount); //events that will be picked up by firebase
     event executedTrade(TradeInstruction instruction, uint amount);
 
-    constructor(uint256 _l2ContractAddress, ISwapRouter _swapRouter, IStarknetCore _starknetCore, IERC20 _token) payable {
+    constructor(uint256 _l2ContractAddress, ISwapRouter _swapRouter, IStarknetCore _starknetCore, IERC20 _usdc, IERC20 _weth) payable {
         swapRouter = _swapRouter;
         starknetCore = _starknetCore;
 
         l2ContractAddress = _l2ContractAddress;
 
-        token = _token;
+        usdc = _usdc;
+        weth = _weth;
 
         //TransferHelper.safeTransferFrom(USDC, msg.sender, address(this), _amount);
 
@@ -77,7 +79,7 @@ contract RockafellerBotL1 is Ownable {
     }
 
     function withdrawl(uint amount) public onlyOwner {
-        token.transfer(msg.sender, amount);
+        usdc.transfer(msg.sender, amount);
         currentAmountUSDC -= amount;
         //TransferHelper.safeTransferFrom(USDC, address(this), msg.sender, amount);
     }
@@ -88,7 +90,7 @@ contract RockafellerBotL1 is Ownable {
         payload[0] = instruction == TradeInstruction.BUY ? 0 : 1;
         payload[1] = amount;
 
-        starknetCore.consumeMessageFromL2(l2ContractAddress, payload);
+        //starknetCore.consumeMessageFromL2(l2ContractAddress, payload);
 
         if(instruction == TradeInstruction.BUY) {
             buyWEth(amount);
@@ -103,15 +105,16 @@ contract RockafellerBotL1 is Ownable {
     function buyWEth(uint amount) private {
         //initiate swap on uniswap USDC -> WEth
         // Approve the router to spend DAI.
-        TransferHelper.safeApprove(USDC, address(swapRouter), amount);
+        usdc.approve(address(swapRouter), amount+100000);
+        //TransferHelper.safeApprove(USDC, address(swapRouter), amount);
 
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: USDC,
-                tokenOut: WETH9,
+                tokenIn: address(usdc),
+                tokenOut: address(weth),
                 fee: poolFee,
-                recipient: msg.sender,
-                deadline: block.timestamp,
+                recipient: address(this),
+                deadline: (block.timestamp + 60*500),
                 amountIn: amount,
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
@@ -124,15 +127,15 @@ contract RockafellerBotL1 is Ownable {
         //initiate swap on uniswap WEth -> USDC
         // Approve the router to spend DAI.
 
-        TransferHelper.safeApprove(USDC, address(swapRouter), amount);
+        weth.approve(address(swapRouter), amount+100000);
 
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: WETH9,
-                tokenOut: USDC,
+                tokenIn: address(weth),
+                tokenOut: address(usdc),
                 fee: poolFee,
-                recipient: msg.sender,
-                deadline: block.timestamp,
+                recipient: address(this),
+                deadline: (block.timestamp + 60*500),
                 amountIn: amount,
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
@@ -143,7 +146,7 @@ contract RockafellerBotL1 is Ownable {
     }
 
     function addFunds(uint amount) public payable {
-        token.transferFrom(msg.sender, address(this), amount);
+        usdc.transferFrom(msg.sender, address(this), amount);
         currentAmountUSDC += amount;
         //TransferHelper.safeTransferFrom(USDC, msg.sender, address(this), amount);
         emit receivedFunds(msg.sender, amount);

@@ -30,11 +30,12 @@ const NULL_STRATEGY = 2
 const WETH_DECIMALS = 18
 const USDC_DECIMALS = 6
 
-const L1_CONTRACT_ADDRESS = (
-    0x2Db8c2615db39a5eD8750B87aC8F217485BE11EC)
-
 @storage_var
 func owner() -> (owner_address: felt):
+end
+
+@storage_var
+func l1_contract() -> (l1_contract_address: felt):
 end
 
 @event
@@ -46,9 +47,10 @@ func constructor{
     syscall_ptr : felt*,
     pedersen_ptr : HashBuiltin*,
     range_check_ptr,
-}():
+}(_l1_contract_address: felt):
     let (_owner) = get_caller_address()
     owner.write(value=_owner)
+    l1_contract.write(value=_l1_contract_address)
     return ()
 end
 
@@ -80,6 +82,7 @@ func calculateStrategy{
     scale_factor : felt,) -> (strategy: felt, amount: felt):
     alloc_locals
     let (_owner) = owner.read()
+    let (_l1_contract_address) = l1_contract.read()
     let (msg_sender) = get_caller_address()
     assert _owner = msg_sender
     let (weights_len, weights) = three_layer_nn(x_data_ptr_len, x_data_ptr, a_num_rows, a_num_cols, a_data_ptr_len, a_data_ptr, 
@@ -93,9 +96,9 @@ func calculateStrategy{
     let (amount: felt*) = alloc()
     let (strategy: felt*) = alloc()
 
-    let amount_usdc_max = 200000000
-    let amount_usdc_extreme = 100000000
-    let amount_usdc_large = 50000000
+    let amount_usdc_max = 20000000
+    let amount_usdc_extreme = 10000000
+    let amount_usdc_large = 5000000
 
     let amount_weth_max = amount_usdc_max * weth_price_ratio
     let amount_weth_extreme = amount_usdc_extreme * weth_price_ratio
@@ -145,44 +148,43 @@ func calculateStrategy{
     end
     if [max_index] == PRICE_DOWN_SMALL:
         #assert [strategy] = SELL_STRATEGY
-        #return (strategy=NULL_STRATEGY, amount=0)
-        if is_overflow_weth_large == 1:
-            assert [amount] = remaining_weth
-        else:
-            assert [amount] = amount_weth_large
-        end
-        assert [strategy] = SELL_STRATEGY
+        return (strategy=NULL_STRATEGY, amount=0)
+        # if is_overflow_weth_large == 1:
+        #     assert [amount] = remaining_weth
+        # else:
+        #     assert [amount] = amount_weth_large
+        # end
+        # assert [strategy] = SELL_STRATEGY
     end
     if [max_index] == PRICE_DOWN_MIN:
         #assert [strategy] = SELL_STRATEGY
-        #return (strategy=NULL_STRATEGY, amount=0)
-        if is_overflow_weth_large == 1:
-            assert [amount] = remaining_weth
-        else:
-            assert [amount] = amount_weth_large
-        end
-        assert [strategy] = SELL_STRATEGY
+        return (strategy=NULL_STRATEGY, amount=0)
+        # if is_overflow_weth_large == 1:
+        #     assert [amount] = remaining_weth
+        # else:
+        #     assert [amount] = amount_weth_large
+        # end
+        # assert [strategy] = SELL_STRATEGY
     end
     if [max_index] == PRICE_UP_MIN:
         #assert [strategy] = BUY_STRATEGY
-        #return (strategy=NULL_STRATEGY, amount=0)
-        if is_overflow_usdc_large == 1:
-            assert [amount] = remaining_usdc
-        else:
-            assert [amount] = amount_usdc_large
-        end
-        assert [strategy] = BUY_STRATEGY
-
+        return (strategy=NULL_STRATEGY, amount=0)
+        # if is_overflow_usdc_large == 1:
+        #     assert [amount] = remaining_usdc
+        # else:
+        #     assert [amount] = amount_usdc_large
+        # end
+        # assert [strategy] = BUY_STRATEGY
     end
     if [max_index] == PRICE_UP_SMALL:
         #assert [strategy] = BUY_STRATEGY
-        #return (strategy=NULL_STRATEGY, amount=0)
-        if is_overflow_usdc_large == 1:
-            assert [amount] = remaining_usdc
-        else:
-            assert [amount] = amount_usdc_large
-        end
-        assert [strategy] = BUY_STRATEGY
+        return (strategy=NULL_STRATEGY, amount=0)
+        # if is_overflow_usdc_large == 1:
+        #     assert [amount] = remaining_usdc
+        # else:
+        #     assert [amount] = amount_usdc_large
+        # end
+        # assert [strategy] = BUY_STRATEGY
 
     end
     if [max_index] == PRICE_UP_MID:
@@ -221,11 +223,15 @@ func calculateStrategy{
         assert [strategy] = BUY_STRATEGY
     end
 
+    if [amount] == 0:
+        return (strategy=NULL_STRATEGY, amount=0)
+    end
+
     let (message_payload : felt*) = alloc()
     assert message_payload[0] = [strategy]
     assert message_payload[1] = [amount]
     send_message_to_l1(
-        to_address=L1_CONTRACT_ADDRESS,
+        to_address=_l1_contract_address,
         payload_size=2,
         payload=message_payload,
     )

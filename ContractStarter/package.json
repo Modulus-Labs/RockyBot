@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "aws-lambda": "^1.0.7",
+    "ethers": "^5.6.9",
     "starknet": "^3.18.2"
   },
   "devDependencies": {
