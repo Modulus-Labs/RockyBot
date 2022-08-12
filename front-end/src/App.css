@@ -3,29 +3,29 @@
   width: fit-content;
 }
 
-.App-header {
+/* .App-header {
   background-color: #282c34;
   display: flex;
-  flex: 1;
+  flex: 10;
   flex-direction: row;
   font-size: calc(10px + 2vmin);
   color: white;
-}
+} */
 
-.Middle-section {
-  flex: 1;
+/* .Middle-section {
+  flex: 20;
   display: flex;
   background-color: lightblue;
-}
+} */
 
-.Bottom-section {
-  flex: 1;
+/* .Bottom-section {
+  flex: 15;
   display: flex;
   background-color: green;
-}
+} */
 
-.footer {
+/* .footer {
   flex: 1;
   display: flex;
   background-color: grey;
-}
+} */
