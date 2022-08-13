@@ -1,48 +1,85 @@
 import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import modulusLabsLogo from './Modulus_Labs_Logo.png';
+import { CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
+import { data, data01, data02, data03, data06 } from "./sample_data";
 
 const dummyActionText: ActionContributionListData[] = [
   {
     actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h"
+    dataText: "1h",
+    isAction: true
   },
   {
     actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h"
+    dataText: "1h",
+    isAction: true
   },
   {
     actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h"
+    dataText: "1h",
+    isAction: true
   },
   {
     actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h"
+    dataText: "1h",
+    isAction: true
+  },
+  {
+    actionText: "Rocky buys 0.02 ETH",
+    dataText: "1h",
+    isAction: true
+  },
+  {
+    actionText: "Rocky buys 0.02 ETH",
+    dataText: "1h",
+    isAction: true
+  },
+  {
+    actionText: "Rocky buys 0.02 ETH",
+    dataText: "1h",
+    isAction: true
   },
 ];
 
 const dummyContributionText: ActionContributionListData[] = [
   {
     actionText: "nayroac.eth",
-    dataText: "0.002 ETH"
+    dataText: "0.002 ETH",
+    isAction: false
   },
   {
     actionText: "nayroac.eth",
-    dataText: "0.002 ETH"
+    dataText: "0.002 ETH",
+    isAction: false
   },
   {
     actionText: "nayroac.eth",
-    dataText: "0.002 ETH"
+    dataText: "0.002 ETH",
+    isAction: false
   },
   {
     actionText: "nayroac.eth",
-    dataText: "0.002 ETH"
+    dataText: "0.002 ETH",
+    isAction: false
+  },
+  {
+    actionText: "nayroac.eth",
+    dataText: "0.002 ETH",
+    isAction: false
+  },
+  {
+    actionText: "nayroac.eth",
+    dataText: "0.002 ETH",
+    isAction: false
   },
 ]
 
 interface ActionContributionListData {
   actionText: string;
   dataText: string;
+  isAction: boolean;
 }
 
 interface RenderActionContributionListProps {
@@ -51,13 +88,16 @@ interface RenderActionContributionListProps {
 
 type donateType = "ETH" | "USDC";
 
-const ActionContributionListItem = ({ actionText, dataText }: ActionContributionListData) => {
+const ActionContributionListItem = ({ actionText, dataText, isAction }: ActionContributionListData) => {
   return (
-    <div>
-      <p>
-        {`${actionText} --> ${dataText}`}
-      </p>
-    </div>
+    <li style={{ borderBottomStyle: "solid", borderBottomColor: "grey", borderBottomWidth: 1, flex: 1, display: "flex", flexDirection: "row", margin: 0 }}>
+      <span style={{ flex: isAction ? 5 : 2, display: "flex", margin: 12 }}>
+        {`${actionText}`}
+      </span>
+      <span style={{ flex: isAction ? 1 : 2, display: "flex", margin: 12, justifyContent: "flex-end" }}>
+        {`${dataText}`}
+      </span>
+    </li>
   )
 }
 
@@ -72,11 +112,12 @@ function App() {
 
   const RenderActionContributionList = (contributionActionListProps: RenderActionContributionListProps) => {
     return (
-      <div>
-        {contributionActionListProps.contributionActionList.map((listItem, _) => (
-          <ActionContributionListItem actionText={listItem.actionText} dataText={listItem.dataText} />
-        ))}
-      </div>
+      <ul style={{ width: "100%", maxHeight: "200px", overflow: "hidden", overflowY: "scroll", padding: 0, margin: 0, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+        {contributionActionListProps.contributionActionList.map((listItem, _) => {
+          return <ActionContributionListItem actionText={listItem.actionText} dataText={listItem.dataText} isAction={listItem.isAction} />
+        }
+        )}
+      </ul>
     );
   }
 
@@ -84,52 +125,43 @@ function App() {
   return (
     <div className="App">
 
-      <div className="App-header" style={{ display: "flex", flex: 10 }}>
+      <div className="App-header" style={{ display: "flex", flex: 10, borderBottomStyle: "solid", borderBottomWidth: 1, borderBottomColor: "grey", padding: 20 }}>
 
         {/* Left major section */}
         <div style={{ flex: 45, display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          {/* Rockefeller Bot 0.1.0 title */}
-          {/* petrona */}
-          <p style={{ color: "black", fontSize: 50, margin: 5, fontFamily: "cursive" }}>
-            {"Rockefeller Bot 0.1.0"}
-          </p>
-          {/* by Modulus Labs */}
-          <p style={{ color: "grey", fontSize: 30, margin: 5 }}>
-            {"by Modulus Labs"}
-          </p>
+
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            {/* Rockefeller Bot 0.1.0 title */}
+            <span style={{ color: "black", fontSize: 50, marginBottom: 5, fontFamily: "cursive", marginRight: 20 }}>
+              {"Rockefeller Bot 0.1.0 "}
+            </span>
+            {/* by Modulus Labs */}
+            <img src={modulusLabsLogo} width={300} height={50} style={{ marginTop: 15 }} />
+          </div>
+
+
           {/* Current value */}
-          <p style={{ color: "black", fontSize: 40, margin: 5, fontFamily: "serif" }}>
+          <span style={{ color: "black", fontSize: 40, fontFamily: "serif" }}>
             {`Current Value: `}<span style={{ color: "red" }}>{`$${value} (USDC + ETH)`}</span>
-          </p>
+          </span>
         </div>
 
         {/* Right major section */}
-        <div style={{ flex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ flex: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
 
           {/* Survived for _ days so far */}
           <div style={{ flex: 1, display: "flex", width: "fit-content", flexDirection: "column", borderStyle: "solid", borderRadius: 15, margin: 15, padding: 15, borderWidth: 1 }}>
-            <p style={{ margin: 0 }}>
+            <span style={{ margin: 0 }}>
               {"Survived for:"}
-            </p>
-            <p style={{ margin: 0, fontSize: 40, color: "lightgreen" }}>
+            </span>
+            <span style={{ margin: 0, fontSize: 40, color: "lightgreen" }}>
               {`${numDaysAlive} Days`}
-            </p>
-            <p style={{ margin: 0 }}>
+            </span>
+            <span style={{ margin: 0 }}>
               {"\n(so far)"}
-            </p>
+            </span>
           </div>
 
-          {/* Twitter button */}
-          <div style={{ flex: 1, display: "flex", }}>
-            {/* target=_blank opens link in new tab */}
-            <a href="https://twitter.com/ModulusLabs" target="_blank">
-              <button style={{ paddingLeft: 20, paddingRight: 20, marginBottom: 10, backgroundColor: "#222222", borderRadius: 10, borderColor: "#444444" }}>
-                <p style={{ color: "#eeeeee" }}>
-                  {"Twitter"}
-                </p>
-              </button>
-            </a>
-          </div>
         </div>
 
       </div>
@@ -137,20 +169,54 @@ function App() {
       {/* For middle section */}
       <div className="Middle-section" style={{ display: "flex", flex: 20, flexDirection: "row" }}>
         {/* Rocky performance graph */}
-        <div style={{ flex: 2, display: "flex", backgroundColor: "grey", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 10, borderWidth: 1 }}>
-          <p>
-            {"TODO(ryancao)!"}
-          </p>
+        <div style={{ flex: 2, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, borderWidth: 1, flexDirection: "column" }}>
+
+          {/* For title element */}
+          <div style={{ flex: 1, display: "flex", borderBottomStyle: "solid", borderBottomWidth: 1, padding: 10, }}>
+            <span style={{ fontSize: 20, fontWeight: "bold" }}>
+              {"Rocky Performance:"}
+            </span>
+          </div>
+
+          <div style={{ flex: 4, display: "flex" }}>
+            <LineChart width={600} height={250} data={data06}
+              margin={{ top: 10, bottom: 10 }}>
+              <XAxis dataKey="timestamp" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="net_worth_USDC" stroke="#8884d8" dot={false} />
+              <Line type="monotone" dataKey="ETH" stroke="#82ca9d" dot={false} />
+            </LineChart>
+          </div>
         </div>
 
         {/* Rocky actions table */}
-        <div style={{ flex: 1, display: "flex", backgroundColor: "purple", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 10, borderWidth: 1 }}>
-          <RenderActionContributionList contributionActionList={actionListData} />
+        <div style={{ flex: 1, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, borderWidth: 1, flexDirection: "column" }}>
+          {/* For title element */}
+          <div style={{ flex: 1, display: "flex", borderBottomStyle: "solid", borderBottomWidth: 1, padding: 10, }}>
+            <span style={{ fontSize: 20, fontWeight: "bold" }}>
+              {"Rocky Actions:"}
+            </span>
+          </div>
+          {/* For list element */}
+          <div style={{ flex: 4, display: "flex" }}>
+            <RenderActionContributionList contributionActionList={actionListData} />
+          </div>
         </div>
 
         {/* Contribution leaderboard */}
-        <div style={{ flex: 1, display: "flex", backgroundColor: "lightgreen", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 10, borderWidth: 1 }}>
-          <RenderActionContributionList contributionActionList={contributionListData} />
+        <div style={{ flex: 1, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, borderWidth: 1, flexDirection: "column" }}>
+          {/* For title element */}
+          <div style={{ flex: 1, display: "flex", borderBottomStyle: "solid", borderBottomWidth: 1, padding: 10, }}>
+            <span style={{ fontSize: 20, fontWeight: "bold" }}>
+              {"Contribution Leaderboard:"}
+            </span>
+          </div>
+          {/* For list element */}
+          <div style={{ flex: 4, display: "flex" }}>
+            <RenderActionContributionList contributionActionList={contributionListData} />
+          </div>
         </div>
       </div>
 
@@ -158,7 +224,7 @@ function App() {
       <div className="Bottom-section" style={{ flex: 15, display: "flex", flexDirection: "row", backgroundColor: "lightgrey" }}>
 
         {/* Text block describing Rocky */}
-        <div style={{ flex: 20, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 20, borderWidth: 1, flexDirection: "column", backgroundColor: "white" }}>
+        <div style={{ flex: 25, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 20, borderWidth: 1, flexDirection: "column", backgroundColor: "white" }}>
           <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 30, fontFamily: "serif" }}>
             {"Welcome to "}
             <span style={{ fontWeight: "bold" }}>{"the world's first fully on-chain AI "}</span>
@@ -180,7 +246,7 @@ function App() {
         </div>
 
         {/* Connect wallet / contribute */}
-        <div style={{ flex: 1, display: "flex", backgroundColor: "white", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 20, borderWidth: 1, flexDirection: "column", alignItems: "center" }}>
+        <div style={{ flex: 10, display: "flex", backgroundColor: "white", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 20, borderWidth: 1, flexDirection: "column", alignItems: "center" }}>
 
           {/* Connect wallet button */}
           <button
@@ -215,8 +281,8 @@ function App() {
 
           {/* Text about proof-of-concept */}
           <span style={{ flex: 40, marginLeft: 20, marginRight: 20 }}>
-            {"Rocky is a proof of concept, and thus we expect him to"}
-            <span style={{ textDecoration: "underline" }}>{" lose all of his money. "}</span>
+            {"Rocky is a proof of concept, and thus we expect him to "}
+            <span style={{ textDecoration: "underline" }}>{"lose all of his money. "}</span>
             {"Nonetheless, you will recieve an NFT for "}
             <span style={{ textDecoration: "underline" }}>{"donations of any amount"}</span>
             {" as a thank you for joining the first ever on-chain AI project :)"}
