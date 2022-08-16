@@ -13,6 +13,11 @@ enum TradeInstruction {
     SELL
 }
 
+enum TokenType {
+    USDC,
+    WETH
+}
+
 interface IStarknetCore {
     /**
       Sends a message to an L2 contract.
@@ -90,7 +95,7 @@ contract RockafellerBotL1 is Ownable {
         payload[0] = instruction == TradeInstruction.BUY ? 0 : 1;
         payload[1] = amount;
 
-        //starknetCore.consumeMessageFromL2(l2ContractAddress, payload);
+        starknetCore.consumeMessageFromL2(l2ContractAddress, payload);
 
         if(instruction == TradeInstruction.BUY) {
             buyWEth(amount);
@@ -145,9 +150,15 @@ contract RockafellerBotL1 is Ownable {
 
     }
 
-    function addFunds(uint amount) public payable {
-        usdc.transferFrom(msg.sender, address(this), amount);
-        currentAmountUSDC += amount;
+    function addFunds(TokenType tokenType, uint amount) public payable {
+        if(tokenType == TokenType.USDC) {
+            usdc.transferFrom(msg.sender, address(this), amount);
+            currentAmountUSDC += amount;
+        }
+        else if (tokenType == TokenType.WETH) {
+            weth.transferFrom(msg.sender, address(this), amount);
+            currentAmountWEth += amount;
+        }
         //TransferHelper.safeTransferFrom(USDC, msg.sender, address(this), amount);
         emit receivedFunds(msg.sender, amount);
     }

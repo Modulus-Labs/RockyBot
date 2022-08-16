@@ -18,7 +18,8 @@ async function main() {
     var approve_trans = await (await usdc.connect(owner).approve(RfB.address, initial_amount + 500)).wait();
     //var thing = await owner.provider?.waitForTransaction(approve_trans.hash);
 
-    const add_funds_trans = await RfB.addFunds(initial_amount)
+    // 0 to add USDC, 1 to add WETH, make sure you approve the right token
+    const add_funds_trans = await RfB.addFunds(0, initial_amount)
     await add_funds_trans.wait()
     console.log(await RfB.currentAmountUSDC())
 }

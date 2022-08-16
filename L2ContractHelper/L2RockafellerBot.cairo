@@ -47,9 +47,8 @@ func constructor{
     syscall_ptr : felt*,
     pedersen_ptr : HashBuiltin*,
     range_check_ptr,
-}(_l1_contract_address: felt):
-    let (_owner) = get_caller_address()
-    owner.write(value=_owner)
+}(_owner_address: felt, _l1_contract_address: felt):
+    owner.write(value=_owner_address)
     l1_contract.write(value=_l1_contract_address)
     return ()
 end

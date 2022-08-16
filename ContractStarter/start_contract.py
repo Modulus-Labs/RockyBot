@@ -3,11 +3,13 @@ import subprocess
 import os
 import boto3
 TEST_CONTRACT_8_ADDR = "0x03850a70be09eecac8b291112c0b28cf0799de385a2c22ad409761b750c70ef5"
-TEST_CONTRACT_REAL_ADDR = "0x067ac66e2fe22627bb900cc61152b7db3a7ec31d82d1577bfc54790341899921"
+TEST_CONTRACT_REAL_ADDR = "0x0457ccb803fad23ec3d495c831131175acc6b8f9f2748e3b7d381ed6cafbc65f"
 ABI_8_FILEPATH = "./ryan_test_contract_8_deploy_abi.json"
 ABI_REAL_FILEPATH = "../L2ContractHelper/compiled/contract_abi.json"
 SCALE_FACTOR = 1e8
 LOAD_DIR = 'jsonModelData'
+STARKNET_NETWORK = "alpha-goerli"
+STARKNET_WALLET = "starkware.starknet.wallets.open_zeppelin.OpenZeppelinAccount"
 
 
 def read_most_recent_data_file():
@@ -15,19 +17,20 @@ def read_most_recent_data_file():
     Reads most recent match file (sorts by timestamp).
     Assumes at least one valid file exists in `jsonPrices/` dir.
     """
-    client = boto3.client('s3')
+    #client = boto3.client('s3')
     #print(os.environ['environment'])
     env = "dev"
-    details_raw = client.get_object(
-        Bucket='rocky-modeldatabucket',
-        Key=os.path.join(env, 'current.json')
-        # Key=os.environ['environment'] + "/current.json"
-    )
+    # details_raw = client.get_object(
+    #     Bucket='rocky-modeldatabucket',
+    #     Key=os.path.join(env, LOAD_DIR, 'current.json')
+    #     # Key=os.environ['environment'] + "/current.json"
+    # )
+    f = open(os.path.join(env, LOAD_DIR, 'current_modeldata.json'))
     #print(details_raw)
-    details = json.load(details_raw['Body'])
-    file_key = os.path.join(details['pathPrefix'], details['fileName'])
+    #details = json.load(details_raw['Body'])
+    #file_key = os.path.join(details['pathPrefix'], LOAD_DIR, details['fileName'])
     # file_key = f"{details['pathPrefix']}/{LOAD_DIR}/{details['fileName']}"
-    f = client.get_object(Bucket='rocky-modeldatabucket', Key=file_key)['Body']
+    #f = client.get_object(Bucket='rocky-modeldatabucket', Key=file_key)['Body']
     return json.load(f)
 
 
@@ -36,7 +39,7 @@ def get_cairo_command(contract_addr,
                       fn_name,
                       args=None,
                       invocation_type="call"):
-    ret = f"starknet {invocation_type} --address {contract_addr} --abi {abi_filepath} --function {fn_name} "
+    ret = f"/home/aweso/cairo-venv/bin/starknet {invocation_type} --address {contract_addr} --abi {abi_filepath} --function {fn_name} "
     if args is not None:
         ret += f"--inputs {args}"
     return ret
@@ -112,9 +115,13 @@ def test_trading_bot_three_layer_nn(a_weights,
         invocation_type="invoke" if invoke else "call")
     #print(f"Executing command: {cairo_command}")
     # --- Execute ---
-    result = subprocess.run(cairo_command.split(" "), capture_output=True)
+    result = subprocess.run(cairo_command.split(" "), capture_output=True, env={"STARKNET_NETWORK": STARKNET_NETWORK, "STARKNET_WALLET": STARKNET_WALLET})
+    #popen = subprocess.Popen(cairo_command.split(" "), stdout=subprocess.PIPE, shell=True)
+    #popen.wait()
+    #result = popen.stdout.read()
     print(result)
-if __name__ == "__main__":
+
+def handler(event, context):
     # test_matvmul()
     # test_two_layer_nn()
     model_data = read_most_recent_data_file()
@@ -122,6 +129,10 @@ if __name__ == "__main__":
     # generate_params_json_trading_bot_three_layer_nn(a_weights, a_bias,
     #                                                 b_weights, b_bias,
     #                                                 c_weights, c_bias)
+
+    #print(subprocess.run("pip3 install cairo-lang".split(" "), capture_output=True))
+    #print(subprocess.run("pwd", capture_output=True))
+    #print(subprocess.run("sudo chmod 777 ./starknet".split(" "), capture_output=True))
     test_trading_bot_three_layer_nn(model_data['a_data_ptr'],
                                     model_data['a_bias_ptr'],
                                     model_data['b_data_ptr'],
@@ -141,3 +152,7 @@ if __name__ == "__main__":
     #                   b_bias,
     #                   mnist_data,
     #                   invoke=False)
+    return 0
+
+if __name__ == "__main__":
+    handler((), ())

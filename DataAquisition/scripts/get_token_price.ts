@@ -1,10 +1,7 @@
-import prompt from 'prompt';
-import * as fs from 'fs';
 import config from '../config';
 
 
 import { createClient, gql } from 'urql';
-import { Token } from 'graphql';
 
 export type TokenPriceSliceData = {
   id: String,
@@ -117,6 +114,7 @@ async function getTokensQueryPerDay(token_address: String, starttime: number, en
     starttime_unix: Math.floor(starttime/1000),
     endtime_unix: Math.ceil(endtime/1000)
   }).toPromise();
+  //console.log(data);
   return data;
 }
 
