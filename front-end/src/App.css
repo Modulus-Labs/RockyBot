@@ -1,0 +1,31 @@
+.App {
+  text-align: center;
+  width: fit-content;
+}
+
+/* .App-header {
+  background-color: #282c34;
+  display: flex;
+  flex: 10;
+  flex-direction: row;
+  font-size: calc(10px + 2vmin);
+  color: white;
+} */
+
+/* .Middle-section {
+  flex: 20;
+  display: flex;
+  background-color: lightblue;
+} */
+
+/* .Bottom-section {
+  flex: 15;
+  display: flex;
+  background-color: green;
+} */
+
+/* .footer {
+  flex: 1;
+  display: flex;
+  background-color: grey;
+} */
