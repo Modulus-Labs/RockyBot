@@ -61,7 +61,7 @@ contract RockafellerBotL1 is Ownable {
 
     uint24 public constant poolFee = 3000;
 
-    event receivedFunds(address sender, uint amount); //events that will be picked up by firebase
+    event receivedFunds(address sender, uint amount, TokenType tokenType); //events that will be picked up by firebase
     event executedTrade(TradeInstruction instruction, uint amount);
 
     constructor(uint256 _l2ContractAddress, ISwapRouter _swapRouter, IStarknetCore _starknetCore, IERC20 _usdc, IERC20 _weth) payable {
@@ -79,17 +79,17 @@ contract RockafellerBotL1 is Ownable {
         currentAmountWEth = 0;
     }
 
-    function updateL2Contract(uint256 _l2ContractAddress) public onlyOwner {
+    function updateL2Contract(uint256 _l2ContractAddress) external onlyOwner {
         l2ContractAddress = _l2ContractAddress;
     }
 
-    function withdrawl(uint amount) public onlyOwner {
+    function withdrawl(uint amount) external onlyOwner {
         usdc.transfer(msg.sender, amount);
         currentAmountUSDC -= amount;
         //TransferHelper.safeTransferFrom(USDC, address(this), msg.sender, amount);
     }
 
-    function receiveInstruction(TradeInstruction instruction, uint amount) public onlyOwner {
+    function receiveInstruction(TradeInstruction instruction, uint amount) external onlyOwner {
         //add checks to make sure only L2 can call this
         uint256[] memory payload = new uint256[](2);
         payload[0] = instruction == TradeInstruction.BUY ? 0 : 1;
@@ -150,7 +150,7 @@ contract RockafellerBotL1 is Ownable {
 
     }
 
-    function addFunds(TokenType tokenType, uint amount) public payable {
+    function addFunds(TokenType tokenType, uint amount) external {
         if(tokenType == TokenType.USDC) {
             usdc.transferFrom(msg.sender, address(this), amount);
             currentAmountUSDC += amount;
@@ -160,6 +160,6 @@ contract RockafellerBotL1 is Ownable {
             currentAmountWEth += amount;
         }
         //TransferHelper.safeTransferFrom(USDC, msg.sender, address(this), amount);
-        emit receivedFunds(msg.sender, amount);
+        emit receivedFunds(msg.sender, amount, tokenType);
     }
 }
