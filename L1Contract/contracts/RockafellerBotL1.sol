@@ -83,10 +83,15 @@ contract RockafellerBotL1 is Ownable {
         l2ContractAddress = _l2ContractAddress;
     }
 
-    function withdrawl(uint amount) external onlyOwner {
-        usdc.transfer(msg.sender, amount);
-        currentAmountUSDC -= amount;
-        //TransferHelper.safeTransferFrom(USDC, address(this), msg.sender, amount);
+    function withdrawl(TokenType tokenType, uint amount) external onlyOwner {
+        if(tokenType == TokenType.USDC) {
+            usdc.transferFrom(msg.sender, address(this), amount);
+            currentAmountUSDC -= amount;
+        }
+        else if (tokenType == TokenType.WETH) {
+            weth.transferFrom(msg.sender, address(this), amount);
+            currentAmountWEth -= amount;
+        }
     }
 
     function receiveInstruction(TradeInstruction instruction, uint amount) external onlyOwner {
