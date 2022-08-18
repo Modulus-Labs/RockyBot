@@ -57,8 +57,8 @@ export const donateToRocky = async (
 
     approveFundsAccessPromise.then((approveFundsAccessObj: any) => {
 
-      console.log("approveFundsAccessObj");
-      console.log(approveFundsAccessObj);
+      // console.log("approveFundsAccessObj");
+      // console.log(approveFundsAccessObj);
       openModalFn(`Thanks for confirming! Waiting on tx (${approveFundsAccessObj.hash})... ` + emoji.get("man-running"), false);
 
       // --- Wait for the tx to finish approving ---
