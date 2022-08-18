@@ -305,13 +305,35 @@ function App() {
           </div>
 
           {/* Current value */}
-          <span style={{ color: "black", fontSize: 30, fontFamily: "serif" }}>
-            {`Current Value: `}<span style={{ color: percentChange > 0 ? "green" : "red" }}>{`$${value} (${percentChange > 0 ? "+" : ""}${percentChange}%)`}</span>
+          <span style={{ color: "black", fontSize: 30, }}>
+            {`Current Value: `}<span style={{ color: percentChange > 0 ? "green" : "red" }}>{`$${roundNumber(value, 2)} (${percentChange > 0 ? "+" : ""}${percentChange}%)`}</span>
           </span>
         </div>
 
         {/* Right major section */}
-        <div style={{ flex: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ flex: 20, display: "flex", flexDirection: "row", alignItems: "center" }}>
+
+          {/* Buttons container */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <a href="https://github.com/Modulus-Labs/RockyBot" target={"_blank"}
+              style={{ flex: 25, borderRadius: 10, borderStyle: "solid", borderWidth: 1, borderColor: "black", backgroundColor: "transparent", cursor: "pointer", alignSelf: "stretch", marginBottom: 10, textDecoration: "none", paddingBottom: 5, paddingTop: 5 }}>
+              <span style={{ fontSize: 15, color: "black" }}>
+                {"GitHub"}
+              </span>
+            </a>
+            <a href="https://github.com/Modulus-Labs/RockyBot/blob/main/L2ContractHelper/L2RockafellerBot.cairo" target={"_blank"}
+              style={{ flex: 25, borderRadius: 10, borderStyle: "solid", borderWidth: 1, borderColor: "black", backgroundColor: "transparent", cursor: "pointer", alignSelf: "stretch", marginBottom: 10, textDecoration: "none", paddingBottom: 5, paddingTop: 5 }}>
+              <span style={{ fontSize: 15, color: "black" }}>
+                {"L2 Contract"}
+              </span>
+            </a>
+            <a href="https://etherscan.io/address/0x3804d8a14b6a2bdcf3ecace58d713dc783a8f2de" target={"_blank"}
+              style={{ flex: 25, borderRadius: 10, borderStyle: "solid", borderWidth: 1, borderColor: "black", backgroundColor: "transparent", cursor: "pointer", alignSelf: "stretch", textDecoration: "none", paddingBottom: 5, paddingTop: 5 }}>
+              <span style={{ fontSize: 15, color: "black" }}>
+                {"L1 Contract"}
+              </span>
+            </a>
+          </div>
 
           {/* Survived for _ days so far */}
           <div style={{ flex: 1, display: "flex", width: "fit-content", flexDirection: "column", borderStyle: "solid", borderRadius: 15, margin: 15, padding: 15, borderWidth: 1 }}>
@@ -342,21 +364,8 @@ function App() {
             </span>
           </div>
 
+          {/* Graph component */}
           <div style={{ flex: 4, display: "flex" }}>
-            {/* <LineChart width={580} height={250} data={rockyStatusData}
-              margin={{ top: 10, bottom: 20, left: 15 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="displayTimestamp" >
-                <Label value="Timestamp" offset={-10} position="insideBottom" style={{ textAnchor: "middle" }} />
-              </XAxis>
-              <YAxis>
-                <Label value="Net Worth (USD)" angle={-90} position={"insideLeft"} offset={-1} style={{ textAnchor: "middle" }} />
-              </YAxis>
-              <Tooltip />
-              <Line type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" dot={false} />
-              <Line type="monotone" dataKey="WETH" stroke="#82ca9d" dot={false} />
-            </LineChart> */}
-
             <AreaChart width={580} height={250} data={rockyStatusData}
               margin={{ top: 10, bottom: 20, left: 15 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -379,8 +388,6 @@ function App() {
               </defs>
               <Area type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
               <Area type="monotone" dataKey="WETH" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
-              {/* <Line type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" dot={false} />
-              <Line type="monotone" dataKey="WETH" stroke="#82ca9d" dot={false} /> */}
             </AreaChart>
           </div>
         </div>
@@ -419,18 +426,18 @@ function App() {
 
         {/* Text block describing Rocky */}
         <div style={{ flex: 25, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 20, borderWidth: 1, flexDirection: "column", backgroundColor: "white" }}>
-          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 30, fontFamily: "serif", fontWeight: "bold" }}>
+          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 30, fontWeight: "bold" }}>
             {"Welcome to the world's first fully on-chain AI trading bot!"}
           </span>
-          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontFamily: "serif", fontSize: 18 }}>
+          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 16 }}>
             {"The Rockefeller Bot (or Rocky) is the world's first \"fully on-chain\" AI trading bot. This means that Rocky is both "}
             <span style={{ fontStyle: "italic" }}>{"trustless and autonomous"}</span>
             {", making decisions by himself without a central authority, much like a DeFi protocol."}
           </span>
-          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontFamily: "serif", fontSize: 18 }}>
+          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 16 }}>
             {"Using zero-knowledge cryptography, proofs of Rocky's trading model — his brains, his model inputs — his diet, and his model weights — his mood, are all logged and validated on the Ethereum blockchain. This is possible thanks to StarkNet, Starkware's impressive L2 roll-up."}
           </span>
-          <span style={{ margin: 0, textAlign: "start", fontFamily: "serif", fontSize: 18 }}>
+          <span style={{ margin: 0, textAlign: "start", fontSize: 16 }}>
             {"For more on how Rocky works, forking your own Rocky ("}
             <a href={"https://github.com/Modulus-Labs/RockyBot"} target="_blank">{"GitHub here!"}</a>
             {"), as well as all things on-chain AI, check us out on "}
