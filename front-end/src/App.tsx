@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import modulusLabsLogo from './Modulus_Labs_Logo.png';
-import { Legend, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
-import { data06 } from "./sample_data";
+import { CartesianGrid, Label, Legend, Line, LineChart, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
+import { ActionContributionListData, data06, RockyGraphData } from "./sample_data";
 import { connectWallet, donateToRocky, DonationToken } from './util/interact';
 import Modal from 'react-modal';
 import emoji from "node-emoji";
@@ -10,6 +10,12 @@ import emoji from "node-emoji";
 import { initializeApp } from "firebase/app";
 import { getFirestore, Firestore, collection, getDocs } from "firebase/firestore";
 import firebase_key from "./firebase_apikey.json";
+import { RockyDonationsDocument, RockyStatusDocument, RockyTradesDocument } from './types/firebase';
+import { convertToHumanUnits, getNumDaysSince, getShortDateRepr, getShorthandTimeIntervalString, roundNumber, truncateAddr } from './util/utils';
+import { DefaultTooltipContent } from 'recharts/lib/component/DefaultTooltipContent';
+
+// --- To estimate leaderboard contribution ---
+const WETH_USDC_CONVERSION_RATE = 1900;
 
 const firebaseConfig = {
   apiKey: firebase_key.key,
@@ -18,85 +24,7 @@ const firebaseConfig = {
   storageBucket: "rockefellerbot.appspot.com",
   messagingSenderId: "441044501776",
   appId: "1:441044501776:web:ab0078ee1140cdd7d05195",
-  //credential: credential.cert("/home/aweso/rockyfirebasekey.json")
 };
-
-const dummyActionText: ActionContributionListData[] = [
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-  {
-    actionText: "Rocky buys 0.02 ETH",
-    dataText: "1h",
-    isAction: true
-  },
-];
-
-const dummyContributionText: ActionContributionListData[] = [
-  {
-    actionText: "nayroac.eth",
-    dataText: "0.002 ETH",
-    isAction: false
-  },
-  {
-    actionText: "nayroac.eth",
-    dataText: "0.002 ETH",
-    isAction: false
-  },
-  {
-    actionText: "nayroac.eth",
-    dataText: "0.002 ETH",
-    isAction: false
-  },
-  {
-    actionText: "nayroac.eth",
-    dataText: "0.002 ETH",
-    isAction: false
-  },
-  {
-    actionText: "nayroac.eth",
-    dataText: "0.002 ETH",
-    isAction: false
-  },
-  {
-    actionText: "nayroac.eth",
-    dataText: "0.002 ETH",
-    isAction: false
-  },
-]
-
-interface ActionContributionListData {
-  actionText: string;
-  dataText: string;
-  isAction: boolean;
-}
 
 interface RenderActionContributionListProps {
   contributionActionList: ActionContributionListData[];
@@ -117,10 +45,15 @@ const ActionContributionListItem = ({ actionText, dataText, isAction }: ActionCo
 
 function App() {
 
-  const [value, setValue] = useState<number>(1800.09);
-  const [numDaysAlive, setNumDaysAlive] = useState<number>(3);
-  const [actionListData, setActionListData] = useState<ActionContributionListData[]>(dummyActionText);
-  const [contributionListData, setContributionListData] = useState<ActionContributionListData[]>(dummyContributionText);
+  // --- For header ---
+  const [value, setValue] = useState<number>(0);
+  const [numDaysAlive, setNumDaysAlive] = useState<number>(0);
+  const [percentChange, setPercentChange] = useState<number>(0);
+
+  // --- For middle section ---
+  const [rockyStatusData, setRockyStatusData] = useState<RockyGraphData[]>([]);
+  const [actionListData, setActionListData] = useState<ActionContributionListData[]>([]);
+  const [contributionListData, setContributionListData] = useState<ActionContributionListData[]>([]);
 
   // --- For wallet/donation stuff ---
   const [donateValue, setDonateValue] = useState<number>(0.001);
@@ -139,23 +72,131 @@ function App() {
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     firebaseDbRef.current = db;
-    // getPlotData();
+    loadDonationData();
+    loadActionData();
+    loadNetWorth();
   }, []), []);
 
   // --- Data loading ---
-  const getPlotData = () => {
-    // TODO(ryancao): Put Firebase endpoint here
+  const compareDonations = (d1: RockyDonationsDocument, d2: RockyDonationsDocument): number => {
+    // --- First convert to "native" units ---
+    const d1HumanAmt = convertToHumanUnits(parseFloat(d1.amount), d1.token);
+    const d2HumanAmt = convertToHumanUnits(parseFloat(d2.amount), d2.token);
+    // --- Convert into equivalent USDC amounts ---
+    const d1USDCAmt = d1.token === "USDC" ? d1HumanAmt : d1HumanAmt * WETH_USDC_CONVERSION_RATE;
+    const d2USDCAmt = d2.token === "USDC" ? d2HumanAmt : d2HumanAmt * WETH_USDC_CONVERSION_RATE;
+    return d1USDCAmt > d2USDCAmt ? -1 : 1;
+  }
+
+  const loadDonationData = () => {
     if (firebaseDbRef.current != null) {
-      console.log("Five");
-      getDocs(collection(firebaseDbRef.current, ""))
+      getDocs(collection(firebaseDbRef.current, "rocky_donations"))
         .then((result) => {
-          console.log("Six");
-          console.log(result);
+
+          // --- Sort by raw data first ---
+          const rockyDonationsList: RockyDonationsDocument[] = result.docs.map((doc) => {
+            return (doc.data() as RockyDonationsDocument);
+          });
+          rockyDonationsList.sort(compareDonations);
+
+          // --- Convert ---
+          let loadedDonationsList: ActionContributionListData[] = [];
+          rockyDonationsList.map((rawDonationEntry) => {
+            const humanUnitsDonationAmt = convertToHumanUnits(parseFloat(rawDonationEntry.amount), rawDonationEntry.token);
+            const donationEntry: ActionContributionListData = {
+              actionText: truncateAddr(rawDonationEntry.contributor_address),
+              dataText: `${humanUnitsDonationAmt} ${rawDonationEntry.token}`,
+              isAction: false,
+              timestamp: rawDonationEntry.timestamp.toDate(),
+            }
+            loadedDonationsList.push(donationEntry);
+          });
+          // --- Sort + set current list ---
+          setContributionListData(loadedDonationsList);
         })
         .catch((error) => {
-          console.log("Seven");
-          console.log(error);
+          console.error("Error in getting rocky_donations collection");
+          console.error(error);
         });
+    } else {
+      console.error("Couldn\'t connect to firebase");
+    }
+  }
+
+  const loadActionData = () => {
+    if (firebaseDbRef.current != null) {
+      getDocs(collection(firebaseDbRef.current, "rocky_trades"))
+        .then((result) => {
+          // --- Read in all donations and process each one ---
+          let loadedTradesList: ActionContributionListData[] = [];
+          result.forEach((doc) => {
+            const rawTradeEntry: RockyTradesDocument = (doc.data() as RockyTradesDocument);
+            const tradeEntry: ActionContributionListData = {
+              actionText: `${rawTradeEntry.action_type} $${rawTradeEntry.amount} worth of WETH`,
+              dataText: getShorthandTimeIntervalString(rawTradeEntry.timestamp.toDate(), false),
+              isAction: true,
+              timestamp: rawTradeEntry.timestamp.toDate(),
+            }
+            loadedTradesList.push(tradeEntry);
+          });
+          // --- Sort + set current list ---
+          loadedTradesList.sort((a, b) => { return a.timestamp > b.timestamp ? -1 : 1 });
+          setActionListData(loadedTradesList);
+        })
+        .catch((error) => {
+          console.error("Error in getting rocky_donations collection");
+          console.error(error);
+        });
+    } else {
+      console.error("Couldn\'t connect to firebase");
+    }
+  }
+
+  const loadNetWorth = () => {
+    if (firebaseDbRef.current != null) {
+      getDocs(collection(firebaseDbRef.current, "rocky_status"))
+        .then((result) => {
+          // --- Read in all donations and process each one ---
+          let rockyStatusList: RockyGraphData[] = [];
+          result.forEach((doc) => {
+            const rawStatusEntry: RockyStatusDocument = (doc.data() as RockyStatusDocument);
+            const netWorthUSDC = parseFloat(rawStatusEntry.net_worth);
+            const humanAmtUSDC = convertToHumanUnits(parseFloat(rawStatusEntry.current_usdc), "USDC");
+            const WETHValueInUSDC = netWorthUSDC - humanAmtUSDC;
+            const statusEntry: RockyGraphData = {
+              timestamp: rawStatusEntry.timestamp.toDate(),
+              WETH: WETHValueInUSDC,
+              USDC: humanAmtUSDC,
+              netWorthUSDC: netWorthUSDC,
+              displayTimestamp: "",
+            }
+            rockyStatusList.push(statusEntry);
+          });
+          // --- Sort + set current list ---
+          rockyStatusList.sort((a, b) => { return a.timestamp > b.timestamp ? 1 : -1 });
+          rockyStatusList.forEach((statusEntry) => {
+            statusEntry.displayTimestamp = getShortDateRepr(statusEntry.timestamp);
+          });
+          setRockyStatusData(rockyStatusList);
+          // --- Set status, percent change, # of days alive ---
+          setValue(rockyStatusList[rockyStatusList.length - 1].netWorthUSDC);
+          if (rockyStatusList.length > 1) {
+            const prevStatus = rockyStatusList[rockyStatusList.length - 2];
+            const curStatus = rockyStatusList[rockyStatusList.length - 1];
+            if (prevStatus.netWorthUSDC > 0) {
+              const percentChange = 100 * (curStatus.netWorthUSDC - prevStatus.netWorthUSDC) / prevStatus.netWorthUSDC;
+              setPercentChange(roundNumber(percentChange));
+            }
+            const firstStatus = rockyStatusList[0];
+            setNumDaysAlive(getNumDaysSince(firstStatus.timestamp, curStatus.timestamp));
+          }
+        })
+        .catch((error) => {
+          console.error("Error in getting rocky_donations collection");
+          console.error(error);
+        });
+    } else {
+      console.error("Couldn\'t connect to firebase");
     }
   }
 
@@ -164,7 +205,11 @@ function App() {
     return (
       <ul style={{ width: "100%", maxHeight: "240px", overflow: "hidden", overflowY: "scroll", padding: 0, margin: 0, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
         {contributionActionListProps.contributionActionList.map((listItem, _) => {
-          return <ActionContributionListItem actionText={listItem.actionText} dataText={listItem.dataText} isAction={listItem.isAction} />
+          return <ActionContributionListItem
+            actionText={listItem.actionText}
+            dataText={listItem.dataText}
+            isAction={listItem.isAction}
+            timestamp={listItem.timestamp} />
         }
         )}
       </ul>
@@ -178,24 +223,11 @@ function App() {
   }
 
   const ModalComponent = () => {
-    const customStyles = {
-      content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        marginRight: '-50%',
-        transform: 'translate(-50%, -50%)',
-      },
-
-    };
-
     return (
       <div>
         <Modal
           ariaHideApp={false}
           isOpen={modalIsOpen}
-          onRequestClose={() => { setModalIsOpen(false) }}
           style={{
             content: {
               top: '50%',
@@ -204,6 +236,7 @@ function App() {
               bottom: 'auto',
               marginRight: '-50%',
               transform: 'translate(-50%, -50%)',
+              maxWidth: "50%",
             },
           }}
         >
@@ -211,7 +244,9 @@ function App() {
             <span style={{ fontSize: 15, marginBottom: 10 }}>{modalText}</span>
             {
               modalDismissVisible ?
-                <button style={{ backgroundColor: "transparent", borderRadius: 10, borderColor: "black", padding: 5, fontSize: 15, borderWidth: 1 }} onClick={() => { setModalIsOpen(false) }}>{"Okay"}</button>
+                <button
+                  style={{ backgroundColor: "transparent", borderRadius: 10, borderColor: "black", padding: 5, fontSize: 15, borderWidth: 1 }}
+                  onClick={() => { setModalIsOpen(false) }}>{"Okay"}</button>
                 :
                 <></>
             }
@@ -219,12 +254,6 @@ function App() {
         </Modal>
       </div>
     );
-  }
-
-
-  // --- Util ---
-  const truncateAddr = (addr: string, length: number = 10): string => {
-    return addr.substring(0, length) + "..." + addr.substring(addr.length - 5);
   }
 
   // --- Button pressing functions ---
@@ -249,7 +278,7 @@ function App() {
       openModalWithOptions("Error: Can't donate less than 0.001 WETH " + emoji.get("pensive"), true);
       return;
     }
-    else if (donateType === "USDC" && donateValue <= 1) {
+    else if (donateType === "USDC" && donateValue < 1) {
       openModalWithOptions("Error: Can't donate less than 1 USDC " + emoji.get("pensive"), true);
       return;
     }
@@ -259,7 +288,7 @@ function App() {
   return (
     <div className="App">
 
-      <div className="App-header" style={{ display: "flex", flex: 10, borderBottomStyle: "solid", borderBottomWidth: 1, borderBottomColor: "grey", padding: 20, paddingBottom: 0 }}>
+      <div className="App-header" style={{ display: "flex", flex: 10, borderBottomStyle: "solid", borderBottomWidth: 1, borderBottomColor: "grey", paddingLeft: 20, paddingRight: 20, alignItems: "center" }}>
 
         {/* Left major section */}
         <div style={{ flex: 45, display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
@@ -270,13 +299,14 @@ function App() {
               {"Rockefeller Bot 0.1.0 "}
             </span>
             {/* by Modulus Labs */}
-            <img src={modulusLabsLogo} width={300} height={50} style={{ marginTop: 15 }} />
+            <a href="https://www.moduluslabs.xyz/" target={"_blank"}>
+              <img src={modulusLabsLogo} width={300} height={50} style={{ marginTop: 15 }} />
+            </a>
           </div>
 
-
           {/* Current value */}
-          <span style={{ color: "black", fontSize: 40, fontFamily: "serif" }}>
-            {`Current Value: `}<span style={{ color: "red" }}>{`$${value} (USDC + ETH)`}</span>
+          <span style={{ color: "black", fontSize: 30, fontFamily: "serif" }}>
+            {`Current Value: `}<span style={{ color: percentChange > 0 ? "green" : "red" }}>{`$${value} (${percentChange > 0 ? "+" : ""}${percentChange}%)`}</span>
           </span>
         </div>
 
@@ -313,14 +343,18 @@ function App() {
           </div>
 
           <div style={{ flex: 4, display: "flex" }}>
-            <LineChart width={600} height={250} data={data06}
-              margin={{ top: 10, bottom: 10 }}>
-              <XAxis dataKey="timestamp" />
-              <YAxis />
+            <LineChart width={580} height={250} data={rockyStatusData}
+              margin={{ top: 10, bottom: 20, left: 15 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="displayTimestamp" >
+                <Label value="Timestamp" offset={-10} position="insideBottom" style={{ textAnchor: "middle" }} />
+              </XAxis>
+              <YAxis>
+                <Label value="Net Worth (USD)" angle={-90} position={"insideLeft"} offset={-1} style={{ textAnchor: "middle" }} />
+              </YAxis>
               <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="net_worth_USDC" stroke="#8884d8" dot={false} />
-              <Line type="monotone" dataKey="ETH" stroke="#82ca9d" dot={false} />
+              <Line type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" dot={false} />
+              <Line type="monotone" dataKey="WETH" stroke="#82ca9d" dot={false} />
             </LineChart>
           </div>
         </div>
@@ -359,10 +393,8 @@ function App() {
 
         {/* Text block describing Rocky */}
         <div style={{ flex: 25, display: "flex", borderStyle: "solid", borderRadius: 15, margin: 10, padding: 20, borderWidth: 1, flexDirection: "column", backgroundColor: "white" }}>
-          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 30, fontFamily: "serif" }}>
-            {"Welcome to "}
-            <span style={{ fontWeight: "bold" }}>{"the world's first fully on-chain AI "}</span>
-            {"trading bot!"}
+          <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontSize: 30, fontFamily: "serif", fontWeight: "bold" }}>
+            {"Welcome to the world's first fully on-chain AI trading bot!"}
           </span>
           <span style={{ margin: 0, textAlign: "start", marginBottom: 10, fontFamily: "serif", fontSize: 18 }}>
             {"The Rockefeller Bot (or Rocky) is the world's first \"fully on-chain\" AI trading bot. This means that Rocky is both "}
@@ -375,7 +407,11 @@ function App() {
           <span style={{ margin: 0, textAlign: "start", fontFamily: "serif", fontSize: 18 }}>
             {"For more on how Rocky works, forking your own Rocky, as well as all things on-chain AI, check us out on "}
             <a href={"https://medium.com/@ModulusLabs"} target="_blank">{"Medium"}</a>
-            {" or get in touch via Twitter or Discord!"}
+            {" or get in touch via "}
+            <a href={"https://twitter.com/ModulusLabs"} target="_blank">{"Twitter"}</a>
+            {" or "}
+            <a href={"https://t.co/KlRkssrQhz"} target="_blank">{"Discord"}</a>
+            {"!"}
           </span>
         </div>
 
