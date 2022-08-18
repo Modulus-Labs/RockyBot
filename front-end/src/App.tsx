@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import modulusLabsLogo from './Modulus_Labs_Logo.png';
-import { CartesianGrid, Label, Legend, Line, LineChart, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, Label, Legend, Line, LineChart, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
 import { ActionContributionListData, data06, RockyGraphData } from "./sample_data";
 import { connectWallet, donateToRocky, DonationToken } from './util/interact';
 import Modal from 'react-modal';
@@ -343,7 +343,7 @@ function App() {
           </div>
 
           <div style={{ flex: 4, display: "flex" }}>
-            <LineChart width={580} height={250} data={rockyStatusData}
+            {/* <LineChart width={580} height={250} data={rockyStatusData}
               margin={{ top: 10, bottom: 20, left: 15 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="displayTimestamp" >
@@ -355,7 +355,33 @@ function App() {
               <Tooltip />
               <Line type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" dot={false} />
               <Line type="monotone" dataKey="WETH" stroke="#82ca9d" dot={false} />
-            </LineChart>
+            </LineChart> */}
+
+            <AreaChart width={580} height={250} data={rockyStatusData}
+              margin={{ top: 10, bottom: 20, left: 15 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="displayTimestamp" >
+                <Label value="Timestamp" offset={-10} position="insideBottom" style={{ textAnchor: "middle" }} />
+              </XAxis>
+              <YAxis>
+                <Label value="Value (USD)" angle={-90} position={"insideLeft"} style={{ textAnchor: "middle" }} />
+              </YAxis>
+              <Tooltip />
+              <defs>
+                <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.5} />
+                  <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.2} />
+                </linearGradient>
+              </defs>
+              <Area type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+              <Area type="monotone" dataKey="WETH" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
+              {/* <Line type="monotone" dataKey="netWorthUSDC" stroke="#8884d8" dot={false} />
+              <Line type="monotone" dataKey="WETH" stroke="#82ca9d" dot={false} /> */}
+            </AreaChart>
           </div>
         </div>
 
@@ -405,7 +431,9 @@ function App() {
             {"Using zero-knowledge cryptography, proofs of Rocky's trading model — his brains, his model inputs — his diet, and his model weights — his mood, are all logged and validated on the Ethereum blockchain. This is possible thanks to StarkNet, Starkware's impressive L2 roll-up."}
           </span>
           <span style={{ margin: 0, textAlign: "start", fontFamily: "serif", fontSize: 18 }}>
-            {"For more on how Rocky works, forking your own Rocky, as well as all things on-chain AI, check us out on "}
+            {"For more on how Rocky works, forking your own Rocky ("}
+            <a href={"https://github.com/Modulus-Labs/RockyBot"} target="_blank">{"GitHub here!"}</a>
+            {"), as well as all things on-chain AI, check us out on "}
             <a href={"https://medium.com/@ModulusLabs"} target="_blank">{"Medium"}</a>
             {" or get in touch via "}
             <a href={"https://twitter.com/ModulusLabs"} target="_blank">{"Twitter"}</a>

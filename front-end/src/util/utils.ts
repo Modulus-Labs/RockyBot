@@ -14,6 +14,9 @@ export const roundNumber = (num: number, decimals: number = 2): number => {
 }
 
 export const truncateAddr = (addr: string, length: number = 10): string => {
+  if (addr.substring(addr.length - 3) === "eth") {
+    return addr;
+  }
   return addr.substring(0, length) + "..." + addr.substring(addr.length - 5);
 }
 
