@@ -132,7 +132,7 @@ function App() {
           result.forEach((doc) => {
             const rawTradeEntry: RockyTradesDocument = (doc.data() as RockyTradesDocument);
             const tradeEntry: ActionContributionListData = {
-              actionText: `${rawTradeEntry.action_type} $${rawTradeEntry.amount} worth of WETH`,
+              actionText: `${rawTradeEntry.action_type} $${roundNumber(parseFloat(rawTradeEntry.amount), 2)} worth of WETH`,
               dataText: getShorthandTimeIntervalString(rawTradeEntry.timestamp.toDate(), false),
               isAction: true,
               timestamp: rawTradeEntry.timestamp.toDate(),

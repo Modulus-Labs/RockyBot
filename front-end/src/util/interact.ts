@@ -37,7 +37,7 @@ export const donateToRocky = async (
 
   if (ethersProvider != null) {
 
-    const nativeUnitAmt = tokenType === "USDC" ? amount * 1e6 : amount * 1e18;
+    const nativeUnitAmt = (tokenType === "USDC" ? amount * 1e6 : amount * 1e18).toString();
 
     // --- Grab the current signer and create USDC/WETH contract ---
     const owner = ethersProvider.getSigner();
