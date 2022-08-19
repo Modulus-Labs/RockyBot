@@ -1,29 +1,10 @@
-# RockyBot
+# RockyBot PyTorch Training
 
-![watercolor of rocky staying alive -- DALLE (original, digital ink)](./rockybot_img.png "watercolor of rocky staying alive -- DALLE (original, digital ink)")
-> "watercolor of rocky staying alive" -- DALLE (original, digital ink)
+- [Getting Started](#getting-started)
+- [Training](#training)
+- [Sample Directory](#sample-directory)
 
-- [Introduction](#introduction)
-- [L2 Contract](#l2contract)
-- [PyTorch Model](#model)
-
-<a name="introduction"/>
-
-## Introduction
-RockyBot is the first ever fully on-chain AI trading bot!! Features include
-
-- An L1 contract which holds funds and exchanges WEth / USDC on Uniswap.
-- An L2 contract implementing a simple (but flexible) 3-layer neural network for predicting future WEth prices.
-- A simple frontend for visualization and PyTorch code for training both regressors and classifiers.
-
-Rocky is live at [rockybot.app](https://www.rockybot.app/) -- check out how he's doing!!
-
-<a name="l2contract"/>
-
-## L2 Contract (Cairo Model)
-The Cairo neural net model can be found in the `L2ContractHelper` directory, under the `L2RockafellerBot.cairo` file (pardon our misspelling!). 
-
-To play with creating your own neural net, copy over all the code from [this line](https://github.com/Modulus-Labs/RockyBot/blob/46ba19eabda2cf35d8ca9805f762f37d53a4fcae/L2ContractHelper/L2RockafellerBot.cairo#L272) onwards and follow the example given by the `three_layer_nn` function. For tips or tricks, feel free to hop on our [Discord](https://t.co/KlRkssrQhz) and reach out!
+<a name="getting-started"/>
 
 ## Getting Started
 This directory is for all things training-related with respect to Rocky!
@@ -32,13 +13,11 @@ This directory is for all things training-related with respect to Rocky!
 - Install Conda from the [official site](https://www.anaconda.com/products/distribution).
 - Create Conda env: `conda create --name rockybot-env --file pytorch-model-env.txt`
 
-> (Note that you should run the above command from this directory!)
+(Note that you should run the above command from this directory!)
 
-<a name="model"/>
+<a name="training"/>
 
-## Pytorch Model
-All of the below is with respect to the `pytorch-model/` directory!
-
+## Training
 Note that the model type which is implemented in Cairo is the simple 3-layer neural net with ReLU activations between each layer (except the final layer, which outputs raw logits/softmax distribution), trained on the dataset derived from [`process_playground_task()`](https://github.com/Modulus-Labs/RockyBot/blob/46ba19eabda2cf35d8ca9805f762f37d53a4fcae/pytorch-model/process_dataset.py#L167) function.
 
 ### Data Generation
@@ -71,7 +50,7 @@ python3 classification_eval.py \
 
 Enter the corresponding model checkpoint to load and evaluate. This command outputs the val loss and accuracy (note that these models will grossly overfit the training set, since market data is noisy and learning is ungeneralizable, as far as we can tell), and generates a confusion matrix as well (see `playground_task_viz/simple_3_layer_classifier/rockybot_sample_1/Confusion_Matrix.png`).
 
-### Sample Directory
+## Sample Directory
 This is how your directory structure should look after running `process_dataset.py`, `classification_train.py`, and `classification_eval.py`!
 
 ```
