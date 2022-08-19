@@ -1,5 +1,8 @@
 # RockyBot
 
+![watercolor of rocky staying alive -- DALLE (original, digital ink)](./rockybot_img.png "watercolor of rocky staying alive -- DALLE (original, digital ink)")
+"watercolor of rocky staying alive" -- DALLE (original, digital ink)
+
 - [Introduction](#introduction)
 - [PyTorch Model](#model)
 - [L2 Contract](#l2contract)
