@@ -1,4 +1,4 @@
-import { BigNumber, ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import { RockafellerBotL1__factory } from "../typechain-types/factories/contracts/RockafellerBotL1.sol/RockafellerBotL1__factory";
 import l1_abi from "./L1_abi.json";
 import emoji from "node-emoji";
@@ -97,16 +97,6 @@ export const donateToRocky = async (
 }
 
 // --------------------------------------------------------------
-
-export interface StatusMessage {
-  status: string;
-  success: boolean;
-  // --- TODO(ryancao): Make this actually typed lol ---
-  txMetadata?: {
-    txHash: string,
-    txReceipt: Promise<ethers.providers.TransactionReceipt>
-  };
-}
 
 /**
  * @returns Currently connected network
