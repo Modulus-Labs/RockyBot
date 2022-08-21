@@ -321,7 +321,7 @@ function App() {
                 {"GitHub"}
               </span>
             </a>
-            <a href="https://github.com/Modulus-Labs/RockyBot/blob/main/L2ContractHelper/L2RockafellerBot.cairo" target={"_blank"}
+            <a href="https://voyager.online/contract/0x0196f582862a43c06888485d6c2258a0d594eac6da3741b95a93f89b1cfd2bf9#messages" target={"_blank"}
               style={{ flex: 25, borderRadius: 10, borderStyle: "solid", borderWidth: 1, borderColor: "black", backgroundColor: "transparent", cursor: "pointer", alignSelf: "stretch", marginBottom: 10, textDecoration: "none", paddingBottom: 5, paddingTop: 5 }}>
               <span style={{ fontSize: 15, color: "black" }}>
                 {"L2 Contract"}
