@@ -372,7 +372,7 @@ function App() {
               <XAxis dataKey="displayTimestamp" >
                 <Label value="Timestamp" offset={-10} position="insideBottom" style={{ textAnchor: "middle" }} />
               </XAxis>
-              <YAxis>
+              <YAxis domain={[0, (dataMax: number) => Math.round(dataMax + 100)]}>
                 <Label value="Value (USD)" angle={-90} position={"insideLeft"} style={{ textAnchor: "middle" }} />
               </YAxis>
               <Tooltip />
