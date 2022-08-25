@@ -10,6 +10,9 @@ import { getFirestore } from "firebase-admin/firestore";
 
 import { RockyTradesDocument } from "../FirebaseScripts/types/firebase";
 
+import { Timestamp } from "firebase/firestore";
+
+
 const firebaseConfig = {
     apiKey: "AIzaSyBPeEjqjrh3uXeDlpWt2a5BWR2GPJcZKcg",
     authDomain: "rockefellerbot.firebaseapp.com",
@@ -41,7 +44,7 @@ async function handler(): Promise<void> {
             var trade_document: RockyTradesDocument = {
                 action_type: "HOLD",
                 amount: "0",
-                timestamp: time
+                timestamp: new Timestamp(Math.ceil(time.getTime()/1000), 0)
             }
             await db.collection("rocky_trades").doc(time.getTime().toString()).set(trade_document);
             return;

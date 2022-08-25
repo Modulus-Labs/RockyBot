@@ -4,6 +4,7 @@
     "cross-fetch": "^3.1.5",
     "esbuild": "^0.15.1",
     "ethers": "^5.6.9",
+    "firebase": "^9.9.3",
     "firebase-admin": "^11.0.1",
     "starknet": "^3.18.2"
   },
