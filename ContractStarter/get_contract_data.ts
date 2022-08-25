@@ -27,7 +27,7 @@ globalThis.fetch = fetch
 import { getTokensQuery, TokenPriceSliceData } from '../DataAquisition/scripts/get_token_price';
 
 export async function handler (): Promise<void> {
-    const provider = new ethers.providers.AlchemyProvider("goerli", "NnMaaIDS0ol9DW-uYqr6j1kHIK9W9suo");
+    const provider = new ethers.providers.AlchemyProvider("mainnet", "-HC6HC2R9crhQe3tcu4h4Qq2nYfCRc9t");
     const RfB = RockafellerBotL1__factory.connect(config.L1_CONTRACT_ADDRESS, provider);
     /*const sn_keypair = ec.getKeyPair(number.toBN(config.SN_PRIVATE_KEY));
     const account_address = config.SN_ACCOUNT_ADDRESS;

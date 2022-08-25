@@ -6,7 +6,7 @@ export type RockyStatusDocument = {
 }
 
 export type RockyTradesDocument = {
-    action_type: "BUY" | "SELL",
+    action_type: "BUY" | "SELL" | "HOLD",
     amount: string,
     timestamp: Date
 }

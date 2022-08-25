@@ -80,10 +80,11 @@ async function handler() {
         console.log("getting donations!");
         const donations = await RfB.queryFilter(RfB.filters.receivedFunds());
         const donationDocuments: RockyDonationsDocument[] = await Promise.all(donations.map(async (trade) => {
+            var ens = await provider.lookupAddress(trade.args.sender);
             var blockTimestamp = new Date((await trade.getBlock()).timestamp*1000);
             return {
                 amount: trade.args.amount.toString(),
-                contributor_address: trade.args.sender,
+                contributor_address: ens ?? trade.args.sender,
                 timestamp: blockTimestamp,
                 token: trade.args.tokenType == 0 ? "USDC" : "WETH"
             }
@@ -98,6 +99,7 @@ async function handler() {
     
     //get rocky status
     {
+        const latest = (await  db.collection('rocky_latest').doc('latest').get()).data();
         console.log("getting rocky status");
         var current_usdc = await RfB.currentAmountUSDC();
         var current_weth = await RfB.currentAmountWEth();
@@ -109,7 +111,11 @@ async function handler() {
             timestamp: new Date()
         }
         console.log("writing rocky status");
-        promises.push(db.collection("rocky_status").doc(statusDocument.timestamp.getTime().toString()).set(statusDocument));
+        if(latest?.current_usdc != current_usdc || latest?.current_weth != current_weth) {
+            console.log("blah");
+            promises.push(db.collection('rocky_latest').doc('latest').set(statusDocument));
+            promises.push(db.collection("rocky_status").doc(statusDocument.timestamp.getTime().toString()).set(statusDocument));
+        }
     }
     await Promise.all(promises);
 }
