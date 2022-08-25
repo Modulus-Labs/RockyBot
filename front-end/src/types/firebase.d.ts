@@ -8,7 +8,7 @@ export type RockyStatusDocument = {
 }
 
 export type RockyTradesDocument = {
-    action_type: "BUY" | "SELL" | "HOLD",
+    action_type: "BUY" | "SELL",
     amount: string,
     timestamp: Timestamp
 }

@@ -63,11 +63,6 @@ def eval_model(model, val_dataloader, criterion, args):
             # --- Compute logits ---
             logits = model(x)
             loss = criterion(logits, y)
-            
-            # print(x[0])
-            # print(y)
-            # print(logits[0])
-            # exit()
 
             # --- Bookkeeping ---
             _, predicted = torch.max(logits.data, 1)
