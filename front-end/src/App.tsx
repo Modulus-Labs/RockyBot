@@ -131,8 +131,9 @@ function App() {
           let loadedTradesList: ActionContributionListData[] = [];
           result.forEach((doc) => {
             const rawTradeEntry: RockyTradesDocument = (doc.data() as RockyTradesDocument);
+            const actionText = rawTradeEntry.action_type === "HOLD" ? `HOLD position` : `${rawTradeEntry.action_type} $${roundNumber(parseFloat(rawTradeEntry.amount), 2)} worth of WETH`;
             const tradeEntry: ActionContributionListData = {
-              actionText: `${rawTradeEntry.action_type} $${roundNumber(parseFloat(rawTradeEntry.amount), 2)} worth of WETH`,
+              actionText: actionText,
               dataText: getShorthandTimeIntervalString(rawTradeEntry.timestamp.toDate(), false),
               isAction: true,
               timestamp: rawTradeEntry.timestamp.toDate(),
@@ -144,7 +145,7 @@ function App() {
           setActionListData(loadedTradesList);
         })
         .catch((error) => {
-          console.error("Error in getting rocky_donations collection");
+          console.error("Error in getting rocky_trades collection");
           console.error(error);
         });
     } else {
