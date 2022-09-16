@@ -4,7 +4,7 @@ import os
 import boto3
 import re
 TEST_CONTRACT_8_ADDR = "0x03850a70be09eecac8b291112c0b28cf0799de385a2c22ad409761b750c70ef5"
-TEST_CONTRACT_REAL_ADDR = "0x0196f582862a43c06888485d6c2258a0d594eac6da3741b95a93f89b1cfd2bf9"
+TEST_CONTRACT_REAL_ADDR = "0x02dec43709a18616e550c1d7acde9ef0e80b72991f80860184d2c0cba82dcc9e"
 ABI_8_FILEPATH = "./ryan_test_contract_8_deploy_abi.json"
 ABI_REAL_FILEPATH = "../L2ContractHelper/compiled/contract_abi.json"
 SCALE_FACTOR = 1e8
@@ -120,7 +120,7 @@ def test_trading_bot_three_layer_nn(a_weights,
     #popen = subprocess.Popen(cairo_command.split(" "), stdout=subprocess.PIPE, shell=True)
     #popen.wait()
     #result = popen.stdout.read()
-    print(result.stdout)
+    print(result)
     return result.stdout
 
 def handler(event, context):

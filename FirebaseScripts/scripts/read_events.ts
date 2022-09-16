@@ -9,7 +9,9 @@ import { RockyDonationsDocument, RockyStatusDocument, RockyTradesDocument } from
 import axios from "axios";
 import { BigFloat } from "bigfloat.js";
 
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
+
+import {Timestamp as Timestamp_Fake} from "firebase/firestore";
 
 
 
@@ -68,7 +70,7 @@ async function handler() {
             return [{
                 action_type: trade.args.instruction == 0 ? "BUY" : "SELL",
                 amount: amountUSD.toString(),
-                timestamp: new Timestamp(Math.ceil(blockTimestamp.getTime()/1000), 0)
+                timestamp: new Timestamp(Math.ceil(blockTimestamp.getTime()/1000), 0) as Timestamp_Fake
             }, blockTimestamp]
         }));
         console.log("writing trades!");
@@ -88,7 +90,7 @@ async function handler() {
             return [{
                 amount: trade.args.amount.toString(),
                 contributor_address: ens ?? trade.args.sender,
-                timestamp: new Timestamp(Math.ceil(blockTimestamp.getTime()/1000), 0),
+                timestamp: new Timestamp(Math.ceil(blockTimestamp.getTime()/1000), 0) as Timestamp_Fake,
                 token: trade.args.tokenType == 0 ? "USDC" : "WETH"
             }, blockTimestamp]
         }));
@@ -112,7 +114,7 @@ async function handler() {
             current_usdc: current_usdc.toString(),
             current_weth: current_weth.toString(),
             net_worth: net_worth.toString(),
-            timestamp: new Timestamp(Math.ceil(now.getTime()/1000), 0)
+            timestamp: new Timestamp(Math.ceil(now.getTime()/1000), 0) as Timestamp_Fake
         }
         console.log("writing rocky status");
         if(latest?.current_usdc != current_usdc || latest?.current_weth != current_weth) {

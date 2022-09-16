@@ -38,6 +38,18 @@ end
 func l1_contract() -> (l1_contract_address: felt):
 end
 
+@storage_var
+func usdc_max() -> (amount_usdc_max: felt):
+end
+
+@storage_var
+func usdc_extreme() -> (amount_usdc_extreme: felt):
+end
+
+@storage_var
+func usdc_large() -> (amount_usdc_large: felt):
+end
+
 @event
 func strategy_sent_to_l2(strategy: felt, amount: felt):
 end
@@ -47,9 +59,30 @@ func constructor{
     syscall_ptr : felt*,
     pedersen_ptr : HashBuiltin*,
     range_check_ptr,
-}(_owner_address: felt, _l1_contract_address: felt):
+}(_owner_address: felt, _l1_contract_address: felt, amount_usdc_max: felt, amount_usdc_extreme: felt, amount_usdc_large: felt):
     owner.write(value=_owner_address)
     l1_contract.write(value=_l1_contract_address)
+    usdc_max.write(value=amount_usdc_max)
+    usdc_extreme.write(value=amount_usdc_extreme)
+    usdc_large.write(value=amount_usdc_large)
+    return ()
+end
+
+@external
+func send_abritrary_message{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(strategy: felt, amount: felt):
+    let (_owner) = owner.read()
+    let (_l1_contract_address) = l1_contract.read()
+    let (msg_sender) = get_caller_address()
+    assert _owner = msg_sender
+    let (message_payload : felt*) = alloc()
+    assert message_payload[0] = strategy
+    assert message_payload[1] = amount
+    send_message_to_l1(
+        to_address=_l1_contract_address,
+        payload_size=2,
+        payload=message_payload,
+    )
+    strategy_sent_to_l2.emit(strategy=strategy, amount=amount)
     return ()
 end
 
@@ -95,9 +128,9 @@ func calculateStrategy{
     let (amount: felt*) = alloc()
     let (strategy: felt*) = alloc()
 
-    let amount_usdc_max = 20000000
-    let amount_usdc_extreme = 10000000
-    let amount_usdc_large = 5000000
+    let (amount_usdc_max) = usdc_max.read()
+    let (amount_usdc_extreme) = usdc_extreme.read()
+    let (amount_usdc_large) = usdc_large.read()
 
     let amount_weth_max = amount_usdc_max * weth_price_ratio
     let amount_weth_extreme = amount_usdc_extreme * weth_price_ratio
