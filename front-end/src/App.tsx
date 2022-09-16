@@ -99,6 +99,15 @@ function App() {
           });
           rockyDonationsList.sort(compareDonations);
 
+          // --- To print out a UNIQUE list of all of the people who have donated ---
+          const contentList = rockyDonationsList.map((rawDonationEntry) => {
+            return rawDonationEntry.contributor_address;
+          });
+          // const content = contentList.filter((c, index) => {
+          //   return contentList.indexOf(c) === index;
+          // }).join("\n");
+          // console.log(content);
+
           // --- Convert ---
           let loadedDonationsList: ActionContributionListData[] = [];
           rockyDonationsList.map((rawDonationEntry) => {
@@ -131,8 +140,9 @@ function App() {
           let loadedTradesList: ActionContributionListData[] = [];
           result.forEach((doc) => {
             const rawTradeEntry: RockyTradesDocument = (doc.data() as RockyTradesDocument);
+            const actionText = rawTradeEntry.action_type === "HOLD" ? `HOLD position` : `${rawTradeEntry.action_type} $${roundNumber(parseFloat(rawTradeEntry.amount), 2)} worth of WETH`;
             const tradeEntry: ActionContributionListData = {
-              actionText: `${rawTradeEntry.action_type} $${roundNumber(parseFloat(rawTradeEntry.amount), 2)} worth of WETH`,
+              actionText: actionText,
               dataText: getShorthandTimeIntervalString(rawTradeEntry.timestamp.toDate(), false),
               isAction: true,
               timestamp: rawTradeEntry.timestamp.toDate(),
@@ -144,7 +154,7 @@ function App() {
           setActionListData(loadedTradesList);
         })
         .catch((error) => {
-          console.error("Error in getting rocky_donations collection");
+          console.error("Error in getting rocky_trades collection");
           console.error(error);
         });
     } else {
@@ -496,12 +506,12 @@ function App() {
           </button>
 
           {/* Text about proof-of-concept */}
-          <span style={{ flex: 40, marginLeft: 20, marginRight: 20 }}>
+          <span style={{ flex: 40, marginLeft: 20, marginRight: 20, fontSize: 12, }}>
             {"Rocky is a proof of concept, and thus we expect him to "}
             <span style={{ textDecoration: "underline" }}>{"lose all of his money. "}</span>
-            {"Nonetheless, you will recieve an NFT for "}
-            <span style={{ textDecoration: "underline" }}>{"donations of any amount"}</span>
-            {" as a thank you for joining the first ever on-chain AI project " + emoji.get("open_mouth")}
+            {"Everyone who donated before 8/31/2022 should already have received their NFT (donating now will earn you a spot on the leaderboard, but all NFTs have been distributed) -- thank you so much for joining the first ever on-chain AI project!!! " + emoji.get("star")}
+            {/* <span style={{ textDecoration: "underline" }}>{"donations of any amount"}</span>
+            {" as a thank you for joining the first ever on-chain AI project " + emoji.get("open_mouth")} */}
           </span>
 
         </div>
