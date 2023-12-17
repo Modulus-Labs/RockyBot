@@ -1,7 +1,7 @@
 import numpy as np
 import csv
 import json
-import os
+import pandas as pd
 from datetime import datetime, timedelta
 
 from constants import RAW_DATA_FILE
@@ -11,43 +11,43 @@ from constants import RAW_DATA_FILE
 def process_csv():
     with open(RAW_DATA_FILE) as data_file:
         # --- Read CSV file ---
-        data_reader = csv.reader(data_file, delimiter=",")
-        # --- Open a new file to write to ---
-        with open("NEAR_USDT_pricedata_processed.csv", "w") as processed_file:
-            data_writer = csv.writer(processed_file, delimiter=",")
-            
+        df = pd.read_csv(data_file)
 
-            # Read the first row, which contains the column names and write it to the new file
-            first_row = next(data_reader) 
-            first_row.append("NEAR_nexthourprice")
+        # --- Remove the rows that have the 30 minute mark ---
+        df = df[df['time_period_start'].str.contains('30:00') == False]
 
-            # Write the first row to the new file
-            data_writer.writerow(first_row)
-
-            previous_row = None
-            # Read as many rows as possible
-            for row in data_reader:
-                sample_string = row[0] # Get the timestamp
-                time_obj = datetime.fromisoformat(sample_string.split('.')[0].replace('Z', '+00:00'))
-
-                # Check if the time is exactly at the 30-minute mark
-                is_at_30_minute_mark = time_obj.minute == 30 and time_obj.second == 0
-
-                if not is_at_30_minute_mark:
-                    # If the time is not at the 30 minute mark, write the row to the new file with an empty price
-                    if previous_row is None:
-                        row.append(row[-3])
-                        data_writer.writerow(row)
-                    else:
-                        print(previous_row == row)
-                        previous_closing_price = previous_row[-4]
-                        row.append(previous_closing_price)
-                        data_writer.writerow(row)
-
-                    previous_row = row
+        # Add three new columns for the next hour, day, and week prices
+        df['near_nexthourprice'] = 0.0
+        df['near_nextdayprice'] = 0.0
+        df['near_nextweekprice'] = 0.0
 
 
-#  TODO: Convert this into a function that returns the data
+        # --- Add the next hour, day, and week prices ---
+        for index, _ in df.iterrows():
+            # --- Get the next hour price ---
+            next_hour = index + 1
+            if next_hour >= len(df):
+                break
+            df.iloc[index, df.columns.get_loc('near_nexthourprice')] = df.iloc[next_hour, df.columns.get_loc('price_close')]
+
+            # --- Get the next day price ---
+            next_day = index + 24
+            if next_day >= len(df):
+                break
+            df.iloc[index,  df.columns.get_loc('near_nextdayprice')] = df.iloc[next_day, df.columns.get_loc('price_close')]
+
+            # # --- Get the next week price ---
+            next_week = index + 168
+            if next_week >= len(df):
+                break
+            df.iloc[index, df.columns.get_loc('near_nextweekprice')] = df.iloc[next_week, df.columns.get_loc('price_close')]
+
+        # Clean those rows that have no next hour, day, or week price
+        df = df[df['near_nexthourprice'] != 0.0]
+
+        # --- Save to CSV file ---
+        df.to_csv('NEAR_USDT_pricedata_processed.csv', index=False)
+
 def read_data_from_csv():
     
     # --- Cols 0 is the timestamp we are interested in --
