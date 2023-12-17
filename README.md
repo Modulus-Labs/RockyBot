@@ -47,10 +47,6 @@ All of the below is with respect to the `pytorch-model/` directory!
 
 Note that the model type which is implemented in Cairo is the simple 3-layer neural net with ReLU activations between each layer (except the final layer, which outputs raw logits/softmax distribution), trained on the dataset derived from [`process_playground_task()`](https://github.com/Modulus-Labs/RockyBot/blob/46ba19eabda2cf35d8ca9805f762f37d53a4fcae/pytorch-model/process_dataset.py#L167) function.
 
-### Data Generation
-
-Simply run `process_dataset.py` with no arguments. This command generates `.npy` files for the `playground_task` task which will be used in classification eval/training.
-
 ### Data Acquisition
 
 The data acquisition happens within the `DataAquisition/` directory! The current setup pulls the on-chain data via the Graph. The dataset is currently extracted and lives within the `pytorch-model` where the model is trained and evaluated.
@@ -58,6 +54,10 @@ The data acquisition happens within the `DataAquisition/` directory! The current
 However, if you'd like to pull another asset than ETH or BTC, you might have to pull your own data using the same setup. For that, you will need your own API_KEY from the Graph.
 
 After you acquire the key, go to the `DataAquisition/` directory and modify the `config.ts` script with your own API_KEY by changing the `API_KEY` variable.
+
+### Data Generation
+
+Simply run `process_dataset.py` with no arguments. This command generates `.npy` files for the `playground_task` task which will be used in classification eval/training.
 
 ### Model Training
 
