@@ -2,24 +2,62 @@ import numpy as np
 import csv
 import json
 import os
+from datetime import datetime, timedelta
 
-import constants
+from constants import RAW_DATA_FILE
 
 
+# Reads the CSV file, removes the price data that comes at the 30 minute mark, and adds the next hour price as a label
+def process_csv():
+    with open(RAW_DATA_FILE) as data_file:
+        # --- Read CSV file ---
+        data_reader = csv.reader(data_file, delimiter=",")
+        # --- Open a new file to write to ---
+        with open("NEAR_USDT_pricedata_processed.csv", "w") as processed_file:
+            data_writer = csv.writer(processed_file, delimiter=",")
+            
+
+            # Read the first row, which contains the column names and write it to the new file
+            first_row = next(data_reader) 
+            first_row.append("NEAR_nexthourprice")
+
+            # Write the first row to the new file
+            data_writer.writerow(first_row)
+
+            previous_row = None
+            # Read as many rows as possible
+            for row in data_reader:
+                sample_string = row[0] # Get the timestamp
+                time_obj = datetime.fromisoformat(sample_string.split('.')[0].replace('Z', '+00:00'))
+
+                # Check if the time is exactly at the 30-minute mark
+                is_at_30_minute_mark = time_obj.minute == 30 and time_obj.second == 0
+
+                if not is_at_30_minute_mark:
+                    # If the time is not at the 30 minute mark, write the row to the new file with an empty price
+                    if previous_row is None:
+                        row.append(row[-3])
+                        data_writer.writerow(row)
+                    else:
+                        print(previous_row == row)
+                        previous_closing_price = previous_row[-4]
+                        row.append(previous_closing_price)
+                        data_writer.writerow(row)
+
+                    previous_row = row
+
+
+#  TODO: Convert this into a function that returns the data
 def read_data_from_csv():
     
-    # --- Cols 0 and 9 are timestamps ---
-    # --- Cols 6-8 are labels ---
-    
-    # TODO(ryancao)!
-    # --- Cols 15-17 are Bitcoin prices, but in the future :'( ---
+    # --- Cols 0 is the timestamp we are interested in --
     
     idx_to_field_data = list()
     idx_to_field_labels = list()
     data_features = list()
     labels = list()
     
-    with open(constants.RAW_DATA_FILE, newline="") as data_file:
+    with open(RAW_DATA_FILE, newline="") as data_file:
         data_reader = csv.reader(data_file, delimiter=",")
         for idx, row in enumerate(data_reader):
             if idx == 0:
@@ -480,27 +518,29 @@ def process_save_data(train_features,
 
 
 if __name__ == "__main__":
-    
-    # --- For consistency ---
-    np.random.seed(constants.RANDOM_SEED)
-    
-    # --- Create folders ---
-    save_dir = os.path.join(constants.DATASET_DIR, constants.HDW_NO_CONTEXT_TASK)
-    if not os.path.isdir(save_dir):
-        os.makedirs(save_dir)
-    
-    # --- Read data ---
-    idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
-    
-    # --- Grab features/labels ---
-    train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
-    process_playground_task(idx_to_field_data, idx_to_field_labels, data_features, labels)
 
-    # --- Save data to file ---
-    process_save_data(train_features, 
-                      train_labels, 
-                      val_features, 
-                      val_labels, 
-                      idx_to_field_data,
-                      idx_to_field_labels,
-                      task_type=constants.PLAYGROUND_TASK)
+    process_csv()
+    
+    # # --- For consistency ---
+    # np.random.seed(constants.RANDOM_SEED)
+    
+    # # --- Create folders ---
+    # save_dir = os.path.join(constants.DATASET_DIR, constants.HDW_NO_CONTEXT_TASK)
+    # if not os.path.isdir(save_dir):
+    #     os.makedirs(save_dir)
+    
+    # # --- Read data ---
+    # idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
+    
+    # # --- Grab features/labels ---
+    # train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
+    # process_playground_task(idx_to_field_data, idx_to_field_labels, data_features, labels)
+
+    # # --- Save data to file ---
+    # process_save_data(train_features, 
+    #                   train_labels, 
+    #                   val_features, 
+    #                   val_labels, 
+    #                   idx_to_field_data,
+    #                   idx_to_field_labels,
+    #                   task_type=constants.PLAYGROUND_TASK)
