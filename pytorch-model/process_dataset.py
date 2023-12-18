@@ -2,9 +2,10 @@ import numpy as np
 import csv
 import json
 import pandas as pd
+import os
 from datetime import datetime, timedelta
 
-from constants import RAW_DATA_FILE, PROCESSED_DATA_FILE, RANDOM_SEED
+from constants import RAW_DATA_FILE, PROCESSED_DATA_FILE, RANDOM_SEED, DATASET_DIR, HDW_NO_CONTEXT_TASK
 
 
 # Reads the CSV file, removes the price data that comes at the 30 minute mark, and adds the next hour price as a label
@@ -224,8 +225,8 @@ def process_playground_task(idx_to_field_data,
     """
     
     # --- Remove BTC prices from future and add in 1-hour-ahead data ---
-    idx_to_field_data, idx_to_field_labels, data_features, labels = \
-        preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels)
+    # idx_to_field_data, idx_to_field_labels, data_features, labels = \
+    #     preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels)
 
     # --- Cuts remainder of BTC features from features ---
     data_features = np.transpose(np.transpose(data_features)[:-5])
@@ -535,16 +536,31 @@ if __name__ == "__main__":
     np.random.seed(RANDOM_SEED)
     
     # # --- Create folders ---
-    # save_dir = os.path.join(constants.DATASET_DIR, constants.HDW_NO_CONTEXT_TASK)
-    # if not os.path.isdir(save_dir):
-    #     os.makedirs(save_dir)
+    save_dir = os.path.join(DATASET_DIR, HDW_NO_CONTEXT_TASK)
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
     
     # --- Read data ---
     idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
+
+    # --- Shuffle data ---
+    indices = np.arange(len(data_features))
+    np.random.shuffle(indices)
+    data_features = data_features[indices]
+    labels = labels[indices]
+
+    # 90 of this data would be train data
+    # 10% of this data would be val data
+    # TODO: Move this as a constant
+    split_index = int(len(data_features) * 0.9)
+    train_features = data_features[:split_index]
+    train_labels = labels[:split_index]
+    val_features = data_features[split_index:]
+    val_labels = labels[split_index:]
+
     
-    # # --- Grab features/labels ---
-    # train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
-    # process_playground_task(idx_to_field_data, idx_to_field_labels, data_features, labels)
+
+
 
     # # --- Save data to file ---
     # process_save_data(train_features, 

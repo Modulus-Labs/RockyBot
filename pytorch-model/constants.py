@@ -54,7 +54,7 @@ def get_dataset_filepath(task_type, filename, create=False):
 # Gives future Bitcoin prices --> not great
 HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
 # No context --> only one timestamp worth of price info
-HDW_NO_CONTEXT_TASK = "btc_eth_hdw_no_context"
+HDW_NO_CONTEXT_TASK = "near_hdw_no_context"
 # Playground regression task
 PLAYGROUND_REGRESSION_TASK = "playground_regression"
 # Classifies which direction the price will move
