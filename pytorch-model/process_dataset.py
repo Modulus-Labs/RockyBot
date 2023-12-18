@@ -5,12 +5,12 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta
 
-from constants import RAW_DATA_FILE, PROCESSED_DATA_FILE, RANDOM_SEED, DATASET_DIR, HDW_NO_CONTEXT_TASK
+import constants 
 
 
 # Reads the CSV file, removes the price data that comes at the 30 minute mark, and adds the next hour price as a label
 def process_csv():
-    with open(RAW_DATA_FILE) as data_file:
+    with open(constants.RAW_DATA_FILE) as data_file:
         # --- Read CSV file ---
         df = pd.read_csv(data_file)
 
@@ -64,20 +64,19 @@ def read_data_from_csv():
     labels = list()
     
     # TODO: Add data points that are correlated with the NEAR price
-    with open(PROCESSED_DATA_FILE, newline="") as data_file:
+    with open(constants.PROCESSED_DATA_FILE, newline="") as data_file:
         data_reader = csv.reader(data_file, delimiter=",")
         for idx, row in enumerate(data_reader):
             if idx == 0:
-                idx_to_field_data = row[1:10]
+                idx_to_field_data = row[4:10]
                 idx_to_field_labels = row[10:]
             else:
                 # Check whether the data has holes in it
                 skip = False
-                for x in row:
+                for x in row[4:10]:
                     if x == "":
                         skip = True
                         break
-
                     if float(x) > 1e10:
                         skip = True
                         break
@@ -85,7 +84,7 @@ def read_data_from_csv():
                 if skip:
                     continue
                 else:
-                    row_features = list(float(x) for x in (row[1:10]))
+                    row_features = list(float(x) for x in (row[4:10]))
                     row_labels = list(float(x) for x in row[10:])
                     data_features.append(row_features)
                     labels.append(row_labels)
@@ -524,19 +523,26 @@ def process_save_data(train_features,
     with open(labels_to_indices_save_path, "w") as f:
         json.dump(labels_to_idx, f)
 
+
+    # Explain what this dataset is
+    print("Training size", len(train_features))
+    print("Validation size", len(val_features))
+    print("Features", idx_to_field_data)
+    print("Labels", idx_to_field_labels)
+    
     print("All done!")
 
 
 if __name__ == "__main__":
 
     # --- Process CSV ---
-    process_csv()
+    # process_csv()
     
     # --- For consistency ---
-    np.random.seed(RANDOM_SEED)
+    np.random.seed(constants.RANDOM_SEED)
     
-    # # --- Create folders ---
-    save_dir = os.path.join(DATASET_DIR, HDW_NO_CONTEXT_TASK)
+    # --- Create folders ---
+    save_dir = os.path.join(constants.DATASET_DIR, constants.HDW_NO_CONTEXT_TASK)
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     
@@ -549,24 +555,19 @@ if __name__ == "__main__":
     data_features = data_features[indices]
     labels = labels[indices]
 
-    # 90 of this data would be train data
-    # 10% of this data would be val data
-    # TODO: Move this as a constant
+    # Create the dataset for the playground task
     split_index = int(len(data_features) * 0.9)
     train_features = data_features[:split_index]
     train_labels = labels[:split_index]
     val_features = data_features[split_index:]
     val_labels = labels[split_index:]
 
-    
-
-
 
     # # --- Save data to file ---
-    # process_save_data(train_features, 
-    #                   train_labels, 
-    #                   val_features, 
-    #                   val_labels, 
-    #                   idx_to_field_data,
-    #                   idx_to_field_labels,
-    #                   task_type=constants.PLAYGROUND_TASK)
+    process_save_data(train_features, 
+                      train_labels, 
+                      val_features, 
+                      val_labels, 
+                      idx_to_field_data,
+                      idx_to_field_labels,
+                      task_type=constants.PLAYGROUND_TASK)
