@@ -7,6 +7,7 @@ EXCHANGE = "BINANCE_SPOT"
 
 # --- For process_dataset.py ---
 RAW_DATA_FILE = "NEAR_USDT_pricedata.csv"
+PROCESSED_DATA_FILE = "NEAR_USDT_pricedata_processed.csv"
 LABEL_FIELDS = ["eth_nexthourprice", "eth_nextdayprice", "eth_nextweekprice"]
 DATASET_DIR = "datasets"
 

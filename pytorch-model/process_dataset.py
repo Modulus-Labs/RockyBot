@@ -4,7 +4,7 @@ import json
 import pandas as pd
 from datetime import datetime, timedelta
 
-from constants import RAW_DATA_FILE
+from constants import RAW_DATA_FILE, PROCESSED_DATA_FILE, RANDOM_SEED
 
 
 # Reads the CSV file, removes the price data that comes at the 30 minute mark, and adds the next hour price as a label
@@ -48,37 +48,46 @@ def process_csv():
         # --- Save to CSV file ---
         df.to_csv('NEAR_USDT_pricedata_processed.csv', index=False)
 
+# TODO: Add data points that are correlated with the NEAR price
 def read_data_from_csv():
     
     # --- Cols 0 is the timestamp we are interested in --
+    # --- Cols 10-12 are the labels we are interested in ---
     
+    # These are the column descriptions 
     idx_to_field_data = list()
     idx_to_field_labels = list()
+
+    # These are the actual data points
     data_features = list()
     labels = list()
     
-    with open(RAW_DATA_FILE, newline="") as data_file:
+    # TODO: Add data points that are correlated with the NEAR price
+    with open(PROCESSED_DATA_FILE, newline="") as data_file:
         data_reader = csv.reader(data_file, delimiter=",")
         for idx, row in enumerate(data_reader):
             if idx == 0:
-                idx_to_field_data = row[1:6] + row[10:]
-                idx_to_field_labels = row[6:9]
+                idx_to_field_data = row[1:10]
+                idx_to_field_labels = row[10:]
             else:
-                # --- Data has some holes in it ---
-                if row[6] == "" or row[7] == "" or row[8] == "":
-                    continue
+                # Check whether the data has holes in it
                 skip = False
-                # --- Data has infinities in it ---
-                for x in row[1:9] + row[10:]:
+                for x in row:
+                    if x == "":
+                        skip = True
+                        break
+
                     if float(x) > 1e10:
                         skip = True
+                        break
+                
                 if skip:
                     continue
-
-                row_features = list(float(x) for x in (row[1:6] + row[10:]))
-                row_labels = list(float(x) for x in row[6:9])
-                data_features.append(row_features)
-                labels.append(row_labels)
+                else:
+                    row_features = list(float(x) for x in (row[1:10]))
+                    row_labels = list(float(x) for x in row[10:])
+                    data_features.append(row_features)
+                    labels.append(row_labels)
 
     data_features = np.asarray(data_features)
     labels = np.asarray(labels)
@@ -519,18 +528,19 @@ def process_save_data(train_features,
 
 if __name__ == "__main__":
 
+    # --- Process CSV ---
     process_csv()
     
-    # # --- For consistency ---
-    # np.random.seed(constants.RANDOM_SEED)
+    # --- For consistency ---
+    np.random.seed(RANDOM_SEED)
     
     # # --- Create folders ---
     # save_dir = os.path.join(constants.DATASET_DIR, constants.HDW_NO_CONTEXT_TASK)
     # if not os.path.isdir(save_dir):
     #     os.makedirs(save_dir)
     
-    # # --- Read data ---
-    # idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
+    # --- Read data ---
+    idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
     
     # # --- Grab features/labels ---
     # train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
