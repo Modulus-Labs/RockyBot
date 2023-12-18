@@ -1,7 +1,13 @@
 import os
 
+# --- For Data Acquisition ---
+API_URL = "https://rest.coinapi.io/v1/ohlcv/"
+TIME_START = "2023-01-20T06:30:00"
+EXCHANGE = "BINANCE_SPOT"
+
 # --- For process_dataset.py ---
-RAW_DATA_FILE = "eth_btc_pricedata.csv"
+RAW_DATA_FILE = "NEAR_USDT_pricedata.csv"
+PROCESSED_DATA_FILE = "NEAR_USDT_pricedata_processed.csv"
 LABEL_FIELDS = ["eth_nexthourprice", "eth_nextdayprice", "eth_nextweekprice"]
 DATASET_DIR = "datasets"
 
@@ -48,7 +54,7 @@ def get_dataset_filepath(task_type, filename, create=False):
 # Gives future Bitcoin prices --> not great
 HOUR_DAY_WEEK_TASK = "btc_eth_hour_day_week"
 # No context --> only one timestamp worth of price info
-HDW_NO_CONTEXT_TASK = "btc_eth_hdw_no_context"
+HDW_NO_CONTEXT_TASK = "near_hdw_no_context"
 # Playground regression task
 PLAYGROUND_REGRESSION_TASK = "playground_regression"
 # Classifies which direction the price will move
