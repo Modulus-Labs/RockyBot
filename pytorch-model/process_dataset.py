@@ -1,46 +1,93 @@
 import numpy as np
 import csv
 import json
+import pandas as pd
 import os
+from datetime import datetime, timedelta
 
-import constants
+import constants 
 
 
+# Reads the CSV file, removes the price data that comes at the 30 minute mark, and adds the next hour price as a label
+def process_csv():
+    with open(constants.RAW_DATA_FILE) as data_file:
+        # --- Read CSV file ---
+        df = pd.read_csv(data_file)
+
+        # --- Remove the rows that have the 30 minute mark ---
+        df = df[df['time_period_start'].str.contains('30:00') == False]
+
+        # Add three new columns for the next hour, day, and week prices
+        df['near_nexthourprice'] = 0.0
+        df['near_nextdayprice'] = 0.0
+        df['near_nextweekprice'] = 0.0
+
+
+        # --- Add the next hour, day, and week prices ---
+        for index, _ in df.iterrows():
+            # --- Get the next hour price ---
+            next_hour = index + 1
+            if next_hour >= len(df):
+                break
+            df.iloc[index, df.columns.get_loc('near_nexthourprice')] = df.iloc[next_hour, df.columns.get_loc('price_close')]
+
+            # --- Get the next day price ---
+            next_day = index + 24
+            if next_day >= len(df):
+                break
+            df.iloc[index,  df.columns.get_loc('near_nextdayprice')] = df.iloc[next_day, df.columns.get_loc('price_close')]
+
+            # # --- Get the next week price ---
+            next_week = index + 168
+            if next_week >= len(df):
+                break
+            df.iloc[index, df.columns.get_loc('near_nextweekprice')] = df.iloc[next_week, df.columns.get_loc('price_close')]
+
+        # Clean those rows that have no next hour, day, or week price
+        df = df[df['near_nexthourprice'] != 0.0]
+
+        # --- Save to CSV file ---
+        df.to_csv('NEAR_USDT_pricedata_processed.csv', index=False)
+
+# TODO: Add data points that are correlated with the NEAR price
 def read_data_from_csv():
     
-    # --- Cols 0 and 9 are timestamps ---
-    # --- Cols 6-8 are labels ---
+    # --- Cols 0 is the timestamp we are interested in --
+    # --- Cols 10-12 are the labels we are interested in ---
     
-    # TODO(ryancao)!
-    # --- Cols 15-17 are Bitcoin prices, but in the future :'( ---
-    
+    # These are the column descriptions 
     idx_to_field_data = list()
     idx_to_field_labels = list()
+
+    # These are the actual data points
     data_features = list()
     labels = list()
     
-    with open(constants.RAW_DATA_FILE, newline="") as data_file:
+    # TODO: Add data points that are correlated with the NEAR price
+    with open(constants.PROCESSED_DATA_FILE, newline="") as data_file:
         data_reader = csv.reader(data_file, delimiter=",")
         for idx, row in enumerate(data_reader):
             if idx == 0:
-                idx_to_field_data = row[1:6] + row[10:]
-                idx_to_field_labels = row[6:9]
+                idx_to_field_data = row[4:10]
+                idx_to_field_labels = row[10:]
             else:
-                # --- Data has some holes in it ---
-                if row[6] == "" or row[7] == "" or row[8] == "":
-                    continue
+                # Check whether the data has holes in it
                 skip = False
-                # --- Data has infinities in it ---
-                for x in row[1:9] + row[10:]:
+                for x in row[4:10]:
+                    if x == "":
+                        skip = True
+                        break
                     if float(x) > 1e10:
                         skip = True
+                        break
+                
                 if skip:
                     continue
-
-                row_features = list(float(x) for x in (row[1:6] + row[10:]))
-                row_labels = list(float(x) for x in row[6:9])
-                data_features.append(row_features)
-                labels.append(row_labels)
+                else:
+                    row_features = list(float(x) for x in (row[4:10]))
+                    row_labels = list(float(x) for x in row[10:])
+                    data_features.append(row_features)
+                    labels.append(row_labels)
 
     data_features = np.asarray(data_features)
     labels = np.asarray(labels)
@@ -177,8 +224,8 @@ def process_playground_task(idx_to_field_data,
     """
     
     # --- Remove BTC prices from future and add in 1-hour-ahead data ---
-    idx_to_field_data, idx_to_field_labels, data_features, labels = \
-        preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels)
+    # idx_to_field_data, idx_to_field_labels, data_features, labels = \
+    #     preprocess_data(idx_to_field_data, idx_to_field_labels, data_features, labels)
 
     # --- Cuts remainder of BTC features from features ---
     data_features = np.transpose(np.transpose(data_features)[:-5])
@@ -476,10 +523,20 @@ def process_save_data(train_features,
     with open(labels_to_indices_save_path, "w") as f:
         json.dump(labels_to_idx, f)
 
+
+    # Explain what this dataset is
+    print("Training size", len(train_features))
+    print("Validation size", len(val_features))
+    print("Features", idx_to_field_data)
+    print("Labels", idx_to_field_labels)
+    
     print("All done!")
 
 
 if __name__ == "__main__":
+
+    # --- Process CSV ---
+    # process_csv()
     
     # --- For consistency ---
     np.random.seed(constants.RANDOM_SEED)
@@ -491,12 +548,22 @@ if __name__ == "__main__":
     
     # --- Read data ---
     idx_to_field_data, idx_to_field_labels, data_features, labels = read_data_from_csv()
-    
-    # --- Grab features/labels ---
-    train_features, train_labels, val_features, val_labels, idx_to_field_data, idx_to_field_labels = \
-    process_playground_task(idx_to_field_data, idx_to_field_labels, data_features, labels)
 
-    # --- Save data to file ---
+    # --- Shuffle data ---
+    indices = np.arange(len(data_features))
+    np.random.shuffle(indices)
+    data_features = data_features[indices]
+    labels = labels[indices]
+
+    # Create the dataset for the playground task
+    split_index = int(len(data_features) * 0.9)
+    train_features = data_features[:split_index]
+    train_labels = labels[:split_index]
+    val_features = data_features[split_index:]
+    val_labels = labels[split_index:]
+
+
+    # # --- Save data to file ---
     process_save_data(train_features, 
                       train_labels, 
                       val_features, 

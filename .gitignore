@@ -352,3 +352,7 @@ MigrationBackup/
 # --- Custom stuff ---
 *.ipynb_checkpoints
 *.csv
+
+
+# --- Ignore all the environment variables ---
+*.env
